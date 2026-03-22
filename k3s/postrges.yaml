@@ -1,0 +1,130 @@
+# ─────────────────────────────────────────
+# NAMESPACE
+# ─────────────────────────────────────────
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: parking-game
+---
+# ─────────────────────────────────────────
+# SECRET
+# NOTE: Remove this block from the file and
+# create manually instead:
+#
+# kubectl create secret generic parking-secret \
+#   -n parking-game \
+#   --from-literal=POSTGRES_DB=parkingdb \
+#   --from-literal=POSTGRES_USER=parking \
+#   --from-literal=POSTGRES_PASSWORD=parkingpass \
+#   --from-literal=DATABASE_URL="postgresql://parking:parkingpass@postgres-service:5432/parkingdb"
+# ─────────────────────────────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: parking-secret
+  namespace: parking-game
+type: Opaque
+stringData:
+  POSTGRES_DB: parkingdb
+  POSTGRES_USER: parking
+  POSTGRES_PASSWORD: parkingpass
+  DATABASE_URL: postgresql://parking:parkingpass@postgres-service:5432/parkingdb
+---
+# ─────────────────────────────────────────
+# PERSISTENT VOLUME CLAIM (NFS)
+# ─────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: parking-game
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 2Gi
+---
+# ─────────────────────────────────────────
+# POSTGRESQL STATEFULSET
+# ─────────────────────────────────────────
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: parking-game
+spec:
+  serviceName: postgres-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: parking-secret
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: parking-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: parking-secret
+                  key: POSTGRES_PASSWORD
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "parking", "-d", "parkingdb"]
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "parking", "-d", "parkingdb"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+# ─────────────────────────────────────────
+# POSTGRESQL SERVICE (headless)
+# ─────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: parking-game
+spec:
+  selector:
+    app: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+  clusterIP: None

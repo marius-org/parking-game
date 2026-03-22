@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Park Like a Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --asphalt: #1a1c1f;
+  --asphalt2: #22252a;
+  --asphalt3: #2d3139;
+  --line: #f5c518;
+  --line2: rgba(245,197,24,0.3);
+  --green: #22c55e;
+  --red: #ef4444;
+  --orange: #f97316;
+  --blue: #3b82f6;
+  --white: #f8fafc;
+  --muted: #64748b;
+  --panel: rgba(10,12,15,0.92);
+  --radius: 8px;
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Barlow', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--asphalt);
+  color: var(--white);
+  font-family: var(--font-body);
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── SCREENS ── */
+.screen { display:none; position:absolute; inset:0; }
+.screen.active { display:flex; }
+
+/* ── START ── */
+#screen-start {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  background: var(--asphalt);
+  background-image:
+    linear-gradient(rgba(245,197,24,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,197,24,0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.start-logo {
+  text-align: center;
+}
+
+.start-logo h1 {
+  font-family: var(--font-display);
+  font-size: clamp(52px, 8vw, 96px);
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.start-logo h1 .park { color: var(--line); }
+.start-logo h1 .like { color: var(--white); font-weight: 400; font-size: 0.6em; display: block; letter-spacing: 8px; }
+.start-logo h1 .pro { color: var(--white); }
+
+.start-logo .tagline {
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 12px;
+}
+
+.start-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 700px;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.info-panel {
+  background: var(--asphalt2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-title::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+
+.controls-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+}
+
+.kbd {
+  background: var(--asphalt3);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-bottom: 3px solid rgba(255,255,255,0.08);
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--line);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.lb-list { display:flex; flex-direction:column; gap:6px; }
+.lb-entry { display:flex; align-items:center; gap:8px; font-size:13px; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.lb-entry:last-child { border:none; }
+.lb-pos { font-family:var(--font-display); font-weight:700; font-size:11px; color:var(--muted); width:20px; }
+.lb-pos.gold { color:#f59e0b; }
+.lb-pos.silver { color:#94a3b8; }
+.lb-pos.bronze { color:#cd7f32; }
+.lb-name { flex:1; color:var(--white); }
+.lb-score { font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--line); }
+.lb-empty { font-size:12px; color:var(--muted); font-style:italic; padding:8px 0; }
+
+.parking-types {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ptype {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.06);
+  font-size: 12px;
+}
+
+.ptype-icon {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
+}
+
+.ptype-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--white);
+}
+
+.ptype-diff {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.diff-easy { background:rgba(34,197,94,0.15); color:var(--green); }
+.diff-med { background:rgba(249,115,22,0.15); color:var(--orange); }
+.diff-hard { background:rgba(239,68,68,0.15); color:var(--red); }
+
+.btn-start {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  background: var(--line);
+  color: #000;
+  border: none;
+  padding: 16px 64px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-start:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(245,197,24,0.3);
+}
+
+/* ── GAME ── */
+#screen-game {
+  flex-direction: row;
+}
+
+#gameCanvas {
+  flex: 1;
+  display: block;
+}
+
+.game-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--panel);
+  border-left: 1px solid rgba(255,255,255,0.06);
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  background: var(--asphalt2);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.sidebar-label {
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.level-badge {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--line);
+  line-height: 1;
+}
+
+.level-type {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+
+.score-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1;
+}
+
+.score-sub {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Damage meter */
+.damage-bar-wrap {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.damage-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s, background 0.3s;
+  background: var(--green);
+}
+
+/* Alignment indicator */
+.align-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.align-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.align-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+
+.align-dot.ok { background: var(--green); }
+.align-dot.warn { background: var(--orange); }
+.align-dot.bad { background: var(--red); }
+
+/* Steering wheel */
+.steering-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.steering-wheel {
+  width: 56px;
+  height: 56px;
+  border: 3px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  position: relative;
+  transition: transform 0.1s;
+}
+
+.steering-spoke {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 2px;
+  height: 22px;
+  background: rgba(255,255,255,0.3);
+  transform-origin: top center;
+  margin-left: -1px;
+  margin-top: -2px;
+}
+
+.steering-spoke:nth-child(2) { transform: rotate(120deg); }
+.steering-spoke:nth-child(3) { transform: rotate(240deg); }
+
+.steering-hub {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 10px; height: 10px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+}
+
+/* Timer */
+.timer-val {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.timer-val.urgent { color: var(--red); animation: timerPulse 0.5s ease infinite; }
+@keyframes timerPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* Attempts */
+.attempts-icons {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.attempt-icon { font-size: 16px; }
+.attempt-icon.used { opacity: 0.2; }
+
+/* Controls hint */
+.controls-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hint-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.hint-kbd {
+  background: var(--asphalt3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+  color: var(--line);
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
+/* ── OVERLAYS ── */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,12,15,0.88);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.overlay.hidden { display: none; }
+
+.overlay-icon { font-size: 64px; }
+
+.overlay-title {
+  font-family: var(--font-display);
+  font-size: clamp(32px, 5vw, 56px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.overlay-title.success { color: var(--green); }
+.overlay-title.fail { color: var(--red); }
+.overlay-title.paused { color: var(--line); }
+
+.overlay-sub {
+  font-size: 14px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  max-width: 340px;
+  line-height: 1.6;
+}
+
+.overlay-score {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 900;
+  color: var(--line);
+}
+
+.overlay-btn {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: var(--line);
+  color: #000;
+  border: none;
+  padding: 12px 40px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.overlay-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245,197,24,0.3); }
+
+.overlay-btn-ghost {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: transparent;
+  color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 10px 32px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.overlay-btn-ghost:hover { color: var(--white); border-color: rgba(255,255,255,0.3); }
+
+.grade-badge {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 40px;
+  font-weight: 900;
+  border: 3px solid;
+}
+
+.grade-S { color: #f59e0b; border-color: #f59e0b; background: rgba(245,158,11,0.1); }
+.grade-A { color: var(--green); border-color: var(--green); background: rgba(34,197,94,0.1); }
+.grade-B { color: var(--blue); border-color: var(--blue); background: rgba(59,130,246,0.1); }
+.grade-C { color: var(--orange); border-color: var(--orange); background: rgba(249,115,22,0.1); }
+.grade-F { color: var(--red); border-color: var(--red); background: rgba(239,68,68,0.1); }
+
+/* ── RESULT SCREEN ── */
+#screen-result {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  background: var(--asphalt);
+  background-image:
+    linear-gradient(rgba(245,197,24,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(245,197,24,0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+.result-final-score {
+  text-align: center;
+}
+
+.result-final-score .label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.result-final-score .number {
+  font-family: var(--font-display);
+  font-size: clamp(64px, 12vw, 112px);
+  font-weight: 900;
+  color: var(--line);
+  line-height: 1;
+  text-shadow: 0 0 60px rgba(245,197,24,0.3);
+}
+
+.result-stats {
+  display: flex;
+  gap: 40px;
+}
+
+.result-stat {
+  text-align: center;
+}
+
+.result-stat .val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.result-stat .lbl {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+.save-row {
+  display: flex;
+  gap: 8px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.name-input {
+  flex: 1;
+  background: var(--asphalt2);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  outline: none;
+}
+
+.name-input:focus { border-color: var(--line); }
+.name-input::placeholder { color: var(--muted); }
+
+.save-btn {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  background: var(--line);
+  color: #000;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.save-msg { font-size: 11px; color: var(--muted); min-height: 16px; text-align: center; }
+
+.result-lb {
+  background: var(--asphalt2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.result-lb .panel-title { margin-bottom: 12px; }
+
+.btn-row { display:flex; gap:12px; }
+</style>
+</head>
+<body>
+
+<!-- ════ START SCREEN ════ -->
+<div id="screen-start" class="screen active">
+  <div class="start-logo">
+    <h1>
+      <span class="like">Park</span>
+      <span class="park">Like</span>
+      <span class="pro"> a Pro</span>
+    </h1>
+    <div class="tagline">Top-down parking simulator</div>
+  </div>
+
+  <div class="start-grid">
+    <div class="info-panel">
+      <div class="panel-title">Controls</div>
+      <div class="controls-list">
+        <div class="ctrl-row"><span class="kbd">↑ W</span> Accelerate</div>
+        <div class="ctrl-row"><span class="kbd">↓ S</span> Reverse</div>
+        <div class="ctrl-row"><span class="kbd">← →</span> Steer</div>
+        <div class="ctrl-row"><span class="kbd">SPACE</span> Handbrake</div>
+        <div class="ctrl-row"><span class="kbd">R</span> Retry level</div>
+        <div class="ctrl-row"><span class="kbd">P</span> Pause</div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <div class="panel-title">Leaderboard</div>
+      <div class="lb-list" id="lb-start">
+        <div class="lb-empty">Loading...</div>
+      </div>
+    </div>
+
+    <div class="info-panel" style="grid-column:1/-1;">
+      <div class="panel-title">Parking Types</div>
+      <div class="parking-types">
+        <div class="ptype">
+          <span class="ptype-icon">🅿️</span>
+          <div>
+            <div class="ptype-name">Perpendicular</div>
+            <div style="font-size:11px;color:var(--muted)">Drive straight into the spot</div>
+          </div>
+          <span class="ptype-diff diff-easy">EASY</span>
+        </div>
+        <div class="ptype">
+          <span class="ptype-icon">📐</span>
+          <div>
+            <div class="ptype-name">Angle Parking</div>
+            <div style="font-size:11px;color:var(--muted)">45° diagonal spot</div>
+          </div>
+          <span class="ptype-diff diff-med">MEDIUM</span>
+        </div>
+        <div class="ptype">
+          <span class="ptype-icon">🚗</span>
+          <div>
+            <div class="ptype-name">Parallel Parking</div>
+            <div style="font-size:11px;color:var(--muted)">Tight street spot, forward-reverse</div>
+          </div>
+          <span class="ptype-diff diff-hard">HARD</span>
+        </div>
+        <div class="ptype">
+          <span class="ptype-icon">🏢</span>
+          <div>
+            <div class="ptype-name">Garage Parking</div>
+            <div style="font-size:11px;color:var(--muted)">Narrow entrance, tight turns</div>
+          </div>
+          <span class="ptype-diff diff-hard">HARD</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-start" onclick="startGame()">▶ Start Driving</button>
+</div>
+
+<!-- ════ GAME SCREEN ════ -->
+<div id="screen-game" class="screen">
+  <canvas id="gameCanvas"></canvas>
+
+  <div class="game-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Level</div>
+      <div class="level-badge" id="sb-level">1</div>
+      <div class="level-type" id="sb-type">Perpendicular</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Score</div>
+      <div class="score-val" id="sb-score">0</div>
+      <div class="score-sub">Total points</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Time</div>
+      <div class="timer-val" id="sb-timer">60</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Car Health</div>
+      <div class="damage-bar-wrap">
+        <div class="damage-bar" id="damage-bar" style="width:100%"></div>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;" id="damage-text">Perfect</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Alignment</div>
+      <div class="align-indicator">
+        <div class="align-row">
+          <div class="align-dot" id="align-pos"></div>
+          <span id="align-pos-text">Position</span>
+        </div>
+        <div class="align-row">
+          <div class="align-dot" id="align-angle"></div>
+          <span id="align-angle-text">Angle</span>
+        </div>
+        <div class="align-row">
+          <div class="align-dot" id="align-speed"></div>
+          <span id="align-speed-text">Speed</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Steering</div>
+      <div class="steering-wrap">
+        <div class="steering-wheel" id="steering-wheel">
+          <div class="steering-spoke"></div>
+          <div class="steering-spoke"></div>
+          <div class="steering-spoke"></div>
+          <div class="steering-hub"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Attempts</div>
+      <div class="attempts-icons" id="attempts-icons"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Controls</div>
+      <div class="controls-hint">
+        <div class="hint-row"><span class="hint-kbd">↑W</span> Forward</div>
+        <div class="hint-row"><span class="hint-kbd">↓S</span> Reverse</div>
+        <div class="hint-row"><span class="hint-kbd">←→</span> Steer</div>
+        <div class="hint-row"><span class="hint-kbd">SPC</span> Handbrake</div>
+        <div class="hint-row"><span class="hint-kbd">R</span> Retry</div>
+        <div class="hint-row"><span class="hint-kbd">P</span> Pause</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlays inside game screen -->
+  <div class="overlay hidden" id="overlay-success">
+    <div class="overlay-icon">🏆</div>
+    <div class="grade-badge grade-S" id="overlay-grade">S</div>
+    <div class="overlay-title success" id="overlay-success-title">Parked!</div>
+    <div class="overlay-sub" id="overlay-success-sub">Perfect parking</div>
+    <div class="overlay-score" id="overlay-success-score">+500</div>
+    <button class="overlay-btn" onclick="nextLevel()">Next Level ▶</button>
+  </div>
+
+  <div class="overlay hidden" id="overlay-fail">
+    <div class="overlay-icon">💥</div>
+    <div class="overlay-title fail" id="overlay-fail-title">Failed!</div>
+    <div class="overlay-sub" id="overlay-fail-sub">Try again</div>
+    <div style="display:flex;gap:12px;">
+      <button class="overlay-btn" onclick="retryLevel()">↺ Retry</button>
+      <button class="overlay-btn-ghost" onclick="goToMenu()">Menu</button>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="overlay-pause">
+    <div class="overlay-title paused">Paused</div>
+    <div class="overlay-sub">Game is paused</div>
+    <div style="display:flex;gap:12px;">
+      <button class="overlay-btn" onclick="togglePause()">▶ Resume</button>
+      <button class="overlay-btn-ghost" onclick="goToMenu()">Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ RESULT SCREEN ════ -->
+<div id="screen-result" class="screen">
+  <div class="start-logo" style="text-align:center;">
+    <h1 style="font-family:var(--font-display);font-size:48px;font-weight:900;letter-spacing:-1px;">
+      <span style="color:var(--line);">Game Over</span>
+    </h1>
+  </div>
+
+  <div class="result-final-score">
+    <div class="label">Final Score</div>
+    <div class="number" id="final-score">0</div>
+  </div>
+
+  <div class="result-stats">
+    <div class="result-stat">
+      <div class="val" id="res-levels">0</div>
+      <div class="lbl">Levels</div>
+    </div>
+    <div class="result-stat">
+      <div class="val" id="res-best">—</div>
+      <div class="lbl">Best Grade</div>
+    </div>
+    <div class="result-stat">
+      <div class="val" id="res-crashes">0</div>
+      <div class="lbl">Crashes</div>
+    </div>
+  </div>
+
+  <div class="save-row">
+    <input class="name-input" type="text" id="res-name" placeholder="Your name" maxlength="20">
+    <button class="save-btn" onclick="saveScore()">Save</button>
+  </div>
+  <div class="save-msg" id="res-msg"></div>
+
+  <div class="result-lb">
+    <div class="panel-title">Leaderboard</div>
+    <div class="lb-list" id="lb-result">
+      <div class="lb-empty">Loading...</div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="overlay-btn" onclick="location.reload()">▶ Play Again</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CANVAS SETUP
+// ══════════════════════════════════════════
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth - 220;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', () => { resizeCanvas(); if (game.running) drawScene(); });
+
+// ══════════════════════════════════════════
+// LEVEL DEFINITIONS
+// ══════════════════════════════════════════
+// Each level: type, spotAngle, spotX/Y relative to canvas center,
+// parkedCars positions, entryX/Y (car start position)
+function buildLevels() {
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+
+  return [
+    // Level 1 — Perpendicular, forward
+    {
+      type: 'Perpendicular',
+      typeIcon: '🅿️',
+      bg: '#1a1c1f',
+      roadColor: '#22252a',
+      spot: { x: cx, y: cy - 80, angle: 90, w: 80, h: 140 },
+      parkedCars: [
+        { x: cx - 104, y: cy - 80, angle: 90, color: '#3b82f6' },
+        { x: cx + 104, y: cy - 80, angle: 90, color: '#ef4444' },
+      ],
+      walls: [],
+      start: { x: cx, y: cy + 280, angle: 90 },
+      timeLimit: 50,
+      hint: 'Drive straight forward into the spot',
+    },
+    // Level 2 — Perpendicular, reverse
+    {
+      type: 'Perpendicular (Reverse)',
+      typeIcon: '🅿️',
+      bg: '#1a1c1f',
+      roadColor: '#22252a',
+      spot: { x: cx, y: cy + 80, angle: 270, w: 80, h: 140 },
+      parkedCars: [
+        { x: cx - 104, y: cy + 80, angle: 90, color: '#22c55e' },
+        { x: cx + 104, y: cy + 80, angle: 90, color: '#a855f7' },
+      ],
+      walls: [],
+      start: { x: cx, y: cy - 280, angle: 270 },
+      timeLimit: 55,
+      hint: 'Reverse into the spot',
+    },
+    // Level 3 — Angle parking
+    {
+      type: 'Angle Parking',
+      typeIcon: '📐',
+      bg: '#1c1a1f',
+      roadColor: '#25222a',
+      spot: { x: cx + 40, y: cy - 100, angle: 45, w: 80, h: 140 },
+      parkedCars: [
+        { x: cx - 56, y: cy - 130, angle: 45, color: '#f97316' },
+        { x: cx + 150, y: cy - 80, angle: 45, color: '#06b6d4' },
+      ],
+      walls: [],
+      start: { x: cx - 160, y: cy + 260, angle: 315 },
+      timeLimit: 55,
+      hint: 'Align to 45° then pull forward',
+    },
+    // Level 4 — Angle parking other side
+    {
+      type: 'Angle Parking',
+      typeIcon: '📐',
+      bg: '#1c1a1f',
+      roadColor: '#25222a',
+      spot: { x: cx - 40, y: cy - 100, angle: 135, w: 80, h: 140 },
+      parkedCars: [
+        { x: cx + 56, y: cy - 130, angle: 135, color: '#8b5cf6' },
+        { x: cx - 150, y: cy - 80, angle: 135, color: '#ec4899' },
+      ],
+      walls: [],
+      start: { x: cx + 160, y: cy + 260, angle: 225 },
+      timeLimit: 55,
+      hint: '135° angle — approach from the right',
+    },
+    // Level 5 — Parallel parking
+    {
+      type: 'Parallel Parking',
+      typeIcon: '🚗',
+      bg: '#1f1c1a',
+      roadColor: '#2a2522',
+      spot: { x: cx - 160, y: cy, angle: 0, w: 140, h: 76 },
+      parkedCars: [
+        { x: cx - 340, y: cy, angle: 0, color: '#64748b' },
+        { x: cx - 20, y: cy, angle: 0, color: '#64748b' },
+      ],
+      walls: [
+        { x: cx - 500, y: cy + 54, w: 900, h: 24 }, // curb
+      ],
+      start: { x: cx + 240, y: cy - 180, angle: 0 },
+      timeLimit: 80,
+      hint: 'Classic parallel: pull forward past the gap, reverse in',
+    },
+    // Level 6 — Parallel parking tight
+    {
+      type: 'Parallel Parking',
+      typeIcon: '🚗',
+      bg: '#1f1c1a',
+      roadColor: '#2a2522',
+      spot: { x: cx, y: cy, angle: 0, w: 120, h: 76 },
+      parkedCars: [
+        { x: cx - 160, y: cy, angle: 0, color: '#ef4444' },
+        { x: cx + 160, y: cy, angle: 0, color: '#3b82f6' },
+      ],
+      walls: [
+        { x: cx - 500, y: cy + 54, w: 1000, h: 24 },
+      ],
+      start: { x: cx + 280, y: cy - 180, angle: 0 },
+      timeLimit: 90,
+      hint: 'Tighter gap — patience and small corrections',
+    },
+    // Level 7 — Garage parking
+    {
+      type: 'Garage Parking',
+      typeIcon: '🏢',
+      bg: '#181818',
+      roadColor: '#202020',
+      spot: { x: cx, y: cy - 80, angle: 90, w: 82, h: 148 },
+      parkedCars: [
+        { x: cx - 104, y: cy - 80, angle: 90, color: '#374151' },
+        { x: cx + 104, y: cy - 80, angle: 90, color: '#374151' },
+      ],
+      walls: [
+        { x: cx - 190, y: cy - 300, w: 28, h: 240 },
+        { x: cx + 162, y: cy - 300, w: 28, h: 240 },
+        { x: cx - 190, y: cy - 300, w: 380, h: 28 },
+      ],
+      start: { x: cx, y: cy + 280, angle: 90 },
+      timeLimit: 65,
+      hint: 'Tight garage — watch the pillars!',
+    },
+    // Level 8 — Garage reverse
+    {
+      type: 'Garage (Reverse)',
+      typeIcon: '🏢',
+      bg: '#181818',
+      roadColor: '#202020',
+      spot: { x: cx, y: cy + 60, angle: 270, w: 82, h: 148 },
+      parkedCars: [
+        { x: cx - 66, y: cy + 40, angle: 90, color: '#1e293b' },
+        { x: cx + 66, y: cy + 40, angle: 90, color: '#1e293b' },
+        { x: cx - 66, y: cy - 80, angle: 90, color: '#374151' },
+        { x: cx + 66, y: cy - 80, angle: 90, color: '#374151' },
+      ],
+      walls: [
+        { x: cx - 130, y: cy - 160, w: 20, h: 280 },
+        { x: cx + 110, y: cy - 160, w: 20, h: 280 },
+        { x: cx - 130, y: cy - 160, w: 260, h: 20 },
+        { x: cx - 130, y: cy + 120, w: 260, h: 20 },
+      ],
+      start: { x: cx, y: cy - 340, angle: 270 },
+      timeLimit: 75,
+      hint: 'Reverse into narrow garage bay',
+    },
+    // Level 9 — Angle in tight lot
+    {
+      type: 'Angle Parking',
+      typeIcon: '📐',
+      bg: '#1c1a1f',
+      roadColor: '#25222a',
+      spot: { x: cx + 40, y: cy - 70, angle: 60, w: 80, h: 140 },
+      parkedCars: [
+        { x: cx - 50, y: cy - 80, angle: 60, color: '#dc2626' },
+        { x: cx + 90, y: cy - 20, angle: 60, color: '#16a34a' },
+        { x: cx + 160, y: cy + 10, angle: 60, color: '#2563eb' },
+      ],
+      walls: [],
+      start: { x: cx - 140, y: cy + 180, angle: 330 },
+      timeLimit: 65,
+      hint: '60° angle — trickier approach',
+    },
+    // Level 10 — Final challenge: perpendicular in narrow garage
+    {
+      type: 'Expert Challenge',
+      typeIcon: '⭐',
+      bg: '#0f0f0f',
+      roadColor: '#181818',
+      spot: { x: cx, y: cy - 70, angle: 90, w: 82, h: 144 },
+      parkedCars: [
+        { x: cx - 66, y: cy - 50, angle: 90, color: '#7f1d1d' },
+        { x: cx + 66, y: cy - 50, angle: 90, color: '#1e3a5f' },
+        { x: cx - 132, y: cy - 50, angle: 90, color: '#374151' },
+        { x: cx + 132, y: cy - 50, angle: 90, color: '#374151' },
+      ],
+      walls: [
+        { x: cx - 180, y: cy - 220, w: 20, h: 220 },
+        { x: cx + 160, y: cy - 220, w: 20, h: 220 },
+        { x: cx - 180, y: cy - 220, w: 360, h: 20 },
+      ],
+      start: { x: cx, y: cy + 200, angle: 90 },
+      timeLimit: 90,
+      hint: 'Everything at once — you got this',
+    },
+  ];
+}
+
+// ══════════════════════════════════════════
+// CAR PHYSICS
+// ══════════════════════════════════════════
+const CAR_W = 38;
+const CAR_H = 68;
+const MAX_SPEED = 3.2;
+const REVERSE_SPEED = 2.2;
+const ACCEL = 0.12;
+const FRICTION = 0.92;
+const STEER_MAX = 0.048;
+const STEER_SPEED = 0.004;
+
+function createCar(x, y, angleDeg) {
+  return {
+    x, y,
+    angle: angleDeg * Math.PI / 180,
+    speed: 0,
+    steer: 0,
+    damage: 0, // 0-100
+  };
+}
+
+function updateCar(car, keys, dt) {
+  const forward = keys['ArrowUp'] || keys['KeyW'];
+  const backward = keys['ArrowDown'] || keys['KeyS'];
+  const left = keys['ArrowLeft'] || keys['KeyA'];
+  const right = keys['ArrowRight'] || keys['KeyD'];
+  const brake = keys['Space'];
+
+  // Acceleration
+  if (forward) car.speed = Math.min(car.speed + ACCEL, MAX_SPEED);
+  else if (backward) car.speed = Math.max(car.speed - ACCEL, -REVERSE_SPEED);
+
+  // Brake / friction
+  if (brake) car.speed *= 0.85;
+  car.speed *= FRICTION;
+  if (Math.abs(car.speed) < 0.01) car.speed = 0;
+
+  // Steering — only effective when moving
+  const steerFactor = Math.min(Math.abs(car.speed) / MAX_SPEED, 1);
+  if (left) car.steer = Math.max(car.steer - STEER_SPEED, -STEER_MAX);
+  else if (right) car.steer = Math.min(car.steer + STEER_SPEED, STEER_MAX);
+  else car.steer *= 0.85; // self-center
+
+  // Apply Ackermann-ish steering
+  if (Math.abs(car.speed) > 0.05) {
+    car.angle += car.steer * steerFactor * (car.speed > 0 ? 1 : -1);
+  }
+
+  // Move
+  car.x += Math.sin(car.angle) * car.speed;
+  car.y -= Math.cos(car.angle) * car.speed;
+}
+
+// ══════════════════════════════════════════
+// COLLISION DETECTION
+// ══════════════════════════════════════════
+function carCorners(x, y, angle, w, h) {
+  const hw = w / 2, hh = h / 2;
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  return [
+    { x: x + (-hw * cos - -hh * sin), y: y + (-hw * sin + -hh * cos) },
+    { x: x + (hw * cos - -hh * sin),  y: y + (hw * sin + -hh * cos) },
+    { x: x + (hw * cos - hh * sin),   y: y + (hw * sin + hh * cos) },
+    { x: x + (-hw * cos - hh * sin),  y: y + (-hw * sin + hh * cos) },
+  ];
+}
+
+function sat(cornersA, cornersB) {
+  function axes(corners) {
+    const axs = [];
+    for (let i = 0; i < corners.length; i++) {
+      const a = corners[i], b = corners[(i+1) % corners.length];
+      axs.push({ x: -(b.y - a.y), y: b.x - a.x });
+    }
+    return axs;
+  }
+  function project(corners, axis) {
+    const dots = corners.map(c => c.x * axis.x + c.y * axis.y);
+    return { min: Math.min(...dots), max: Math.max(...dots) };
+  }
+  const allAxes = [...axes(cornersA), ...axes(cornersB)];
+  for (const ax of allAxes) {
+    const pA = project(cornersA, ax);
+    const pB = project(cornersB, ax);
+    if (pA.max < pB.min || pB.max < pA.min) return false;
+  }
+  return true;
+}
+
+function checkCarCollision(car, otherX, otherY, otherAngle, ow, oh) {
+  const carC = carCorners(car.x, car.y, car.angle, CAR_W, CAR_H);
+  const othC = carCorners(otherX, otherY, otherAngle * Math.PI / 180, ow, oh);
+  return sat(carC, othC);
+}
+
+function checkWallCollision(car, wall) {
+  const carC = carCorners(car.x, car.y, car.angle, CAR_W, CAR_H);
+  // Wall as rotated rect with angle 0
+  const wx = wall.x + wall.w / 2, wy = wall.y + wall.h / 2;
+  const wallC = carCorners(wx, wy, 0, wall.w, wall.h);
+  return sat(carC, wallC);
+}
+
+// ══════════════════════════════════════════
+// PARKING VALIDATION
+// ══════════════════════════════════════════
+function checkParked(car, spot) {
+  // Distance from car center to spot center
+  const dx = car.x - spot.x;
+  const dy = car.y - spot.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+
+  // Angle difference (normalized)
+  const targetAngle = spot.angle * Math.PI / 180;
+  let angleDiff = Math.abs(car.angle - targetAngle) % (Math.PI * 2);
+  if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+  // Also check 180° offset (reversed in)
+  let angleDiff2 = Math.abs(car.angle - targetAngle - Math.PI) % (Math.PI * 2);
+  if (angleDiff2 > Math.PI) angleDiff2 = Math.PI * 2 - angleDiff2;
+  const bestAngleDiff = Math.min(angleDiff, angleDiff2);
+
+  const speed = Math.abs(car.speed);
+
+  return {
+    dist,
+    angleDiff: bestAngleDiff,
+    speed,
+    posOk: dist < 34,
+    angleOk: bestAngleDiff < 0.25,
+    stopped: speed < 0.15,
+    perfect: dist < 16 && bestAngleDiff < 0.1 && speed < 0.05,
+  };
+}
+
+function parkingGrade(check, timeLeft, timeLimit, damage) {
+  if (!check.posOk || !check.angleOk) return 'F';
+  const timeBonus = timeLeft / timeLimit;
+  const damageBonus = 1 - damage / 100;
+  const score = timeBonus * 0.4 + damageBonus * 0.3 + (check.perfect ? 0.3 : 0.15);
+  if (score > 0.85) return 'S';
+  if (score > 0.70) return 'A';
+  if (score > 0.55) return 'B';
+  return 'C';
+}
+
+function gradePoints(grade) {
+  return { S: 500, A: 350, B: 220, C: 100, F: 0 }[grade];
+}
+
+// ══════════════════════════════════════════
+// DRAWING
+// ══════════════════════════════════════════
+// ── DECOR SEEDED RANDOM (deterministic per level) ──
+function seededRand(seed) {
+  let s = seed;
+  return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
+}
+
+function drawScene() {
+  const W = canvas.width, H = canvas.height;
+  const level = game.levels[game.levelIndex];
+  const car = game.car;
+  const cx = W / 2, cy = H / 2;
+  const li = game.levelIndex;
+
+  // ── GROUND ──
+  ctx.fillStyle = level.roadColor;
+  ctx.fillRect(0, 0, W, H);
+
+  // Asphalt texture — fine grain
+  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  const rng = seededRand(li * 999 + 1);
+  for (let i = 0; i < 600; i++) {
+    const gx = rng() * W, gy = rng() * H, gs = rng() * 3 + 1;
+    ctx.fillRect(gx, gy, gs, gs);
+  }
+
+  // ── ROAD LANES ──
+  // Main driving lane — dashed center line
+  ctx.setLineDash([28, 20]);
+  ctx.strokeStyle = 'rgba(245,197,24,0.18)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── PAVEMENT / SIDEWALK STRIPS ──
+  // Top and bottom curb zones
+  ctx.fillStyle = '#2a2d32';
+  ctx.fillRect(0, 0, W, 60);
+  ctx.fillRect(0, H - 60, W, 60);
+  ctx.fillRect(0, 0, 60, H);
+  ctx.fillRect(W - 60, 0, 60, H);
+
+  // Curb edge lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.strokeRect(60, 60, W - 120, H - 120);
+
+  // ── TREES (green circles with shadow) ──
+  const treeRng = seededRand(li * 7 + 42);
+  const treePositions = [
+    [80, 80], [W - 80, 80], [80, H - 80], [W - 80, H - 80],
+    [cx - 280, 80], [cx + 280, 80],
+    [cx - 280, H - 80], [cx + 280, H - 80],
+    [80, cy - 200], [80, cy + 200],
+    [W - 80, cy - 200], [W - 80, cy + 200],
+  ];
+  treePositions.forEach(([tx, ty]) => {
+    const r = 22 + treeRng() * 8;
+    // Shadow
+    ctx.save();
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(tx + 6, ty + 6, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Trunk
+    ctx.fillStyle = '#5a3e28';
+    ctx.beginPath(); ctx.ellipse(tx, ty, 6, 8, 0, 0, Math.PI * 2); ctx.fill();
+    // Crown outer
+    ctx.fillStyle = '#1a5c2a';
+    ctx.beginPath(); ctx.arc(tx, ty - 4, r, 0, Math.PI * 2); ctx.fill();
+    // Crown inner highlight
+    ctx.fillStyle = '#22763a';
+    ctx.beginPath(); ctx.arc(tx - 4, ty - 8, r * 0.6, 0, Math.PI * 2); ctx.fill();
+    // Crown top shine
+    ctx.fillStyle = '#2d9e50';
+    ctx.beginPath(); ctx.arc(tx - 6, ty - 10, r * 0.3, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // ── BENCHES / BOLLARDS along sidewalk ──
+  const bollardRng = seededRand(li * 13 + 77);
+  const bollardPositions = [
+    [cx - 160, 40], [cx, 40], [cx + 160, 40],
+    [cx - 160, H - 40], [cx, H - 40], [cx + 160, H - 40],
+    [40, cy - 120], [40, cy], [40, cy + 120],
+    [W - 40, cy - 120], [W - 40, cy], [W - 40, cy + 120],
+  ];
+  bollardPositions.forEach(([bx, by]) => {
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.ellipse(bx + 3, by + 3, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Bollard body
+    ctx.fillStyle = '#f5c518';
+    ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // ── LAMP POSTS ──
+  const lampPositions = [
+    [cx - 340, cy - 260], [cx + 340, cy - 260],
+    [cx - 340, cy + 260], [cx + 340, cy + 260],
+  ];
+  lampPositions.forEach(([lx, ly]) => {
+    // Pole
+    ctx.strokeStyle = '#4a5568';
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 30); ctx.lineTo(lx, ly - 10); ctx.stroke();
+    // Arm
+    ctx.beginPath(); ctx.moveTo(lx, ly - 10); ctx.lineTo(lx + 16, ly - 18); ctx.stroke();
+    // Light glow
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    const grd = ctx.createRadialGradient(lx + 16, ly - 18, 0, lx + 16, ly - 18, 60);
+    grd.addColorStop(0, '#fff8c0');
+    grd.addColorStop(1, 'transparent');
+    ctx.fillStyle = grd;
+    ctx.beginPath(); ctx.arc(lx + 16, ly - 18, 60, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Lamp head
+    ctx.fillStyle = '#cbd5e1';
+    ctx.fillRect(lx + 8, ly - 22, 18, 8);
+    ctx.fillStyle = '#fef9c3';
+    ctx.fillRect(lx + 10, ly - 20, 14, 5);
+    // Base
+    ctx.fillStyle = '#374151';
+    ctx.beginPath(); ctx.ellipse(lx, ly + 30, 8, 5, 0, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // ── PARKED CAR SHADOWS (background layer) ──
+  level.parkedCars.forEach(pc => {
+    ctx.save();
+    ctx.translate(pc.x + 5, pc.y + 5);
+    ctx.rotate(pc.angle * Math.PI / 180);
+    ctx.globalAlpha = 0.25;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // ── WALLS ──
+  if (level.walls) {
+    level.walls.forEach(wall => {
+      // Wall shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fillRect(wall.x + 5, wall.y + 5, wall.w, wall.h);
+      // Wall body
+      const wallGrad = ctx.createLinearGradient(wall.x, wall.y, wall.x, wall.y + wall.h);
+      wallGrad.addColorStop(0, '#3a3f4a');
+      wallGrad.addColorStop(1, '#1a1d22');
+      ctx.fillStyle = wallGrad;
+      ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+      // Concrete panel lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = 2;
+      for (let i = 0; i < wall.w; i += 40) {
+        ctx.beginPath(); ctx.moveTo(wall.x + i, wall.y); ctx.lineTo(wall.x + i, wall.y + wall.h); ctx.stroke();
+      }
+      // Top highlight
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(wall.x, wall.y); ctx.lineTo(wall.x + wall.w, wall.y); ctx.stroke();
+      // Pillar caps
+      for (let i = 0; i <= wall.w; i += 40) {
+        ctx.fillStyle = '#f5c518';
+        ctx.fillRect(wall.x + i - 3, wall.y - 3, 6, 6);
+      }
+    });
+  }
+
+  // ── PARKING SPOT ──
+  drawParkingSpot(level.spot);
+
+  // ── ROAD MARKINGS — stop line, arrows ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 3;
+  ctx.setLineDash([10, 10]);
+  // Subtle lane guides
+  ctx.beginPath(); ctx.moveTo(0, cy - 80); ctx.lineTo(W, cy - 80); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, cy + 80); ctx.lineTo(W, cy + 80); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── PARKED CARS ──
+  level.parkedCars.forEach(pc => {
+    drawCar(pc.x, pc.y, pc.angle * Math.PI / 180, pc.color, false);
+  });
+
+  // ── PLAYER CAR SHADOW ──
+  ctx.save();
+  ctx.translate(car.x + 6, car.y + 6);
+  ctx.rotate(car.angle);
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5);
+  ctx.fill();
+  ctx.restore();
+
+  // ── PLAYER CAR ──
+  drawCar(car.x, car.y, car.angle, game.carColor, true, car.damage);
+
+  // ── PROXIMITY GUIDE ──
+  drawProximityGuide(car, level.spot);
+}
+
+function drawParkingSpot(spot) {
+  const check = game.car ? checkParked(game.car, spot) : null;
+  const nearPos = check && check.dist < 80;
+  const isParked = check && check.posOk && check.angleOk;
+
+  ctx.save();
+  ctx.translate(spot.x, spot.y);
+  ctx.rotate(spot.angle * Math.PI / 180);
+
+  // Spot fill
+  if (isParked) {
+    ctx.fillStyle = 'rgba(34,197,94,0.2)';
+  } else if (nearPos) {
+    ctx.fillStyle = 'rgba(245,197,24,0.1)';
+  } else {
+    ctx.fillStyle = 'rgba(245,197,24,0.05)';
+  }
+  ctx.fillRect(-spot.w/2, -spot.h/2, spot.w, spot.h);
+
+  // Spot lines
+  const lineColor = isParked ? '#22c55e' : nearPos ? '#f5c518' : 'rgba(245,197,24,0.5)';
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(-spot.w/2, -spot.h/2, spot.w, spot.h);
+
+  // P symbol
+  ctx.fillStyle = isParked ? 'rgba(34,197,94,0.6)' : 'rgba(245,197,24,0.3)';
+  ctx.font = 'bold 20px Barlow Condensed';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('P', 0, 0);
+
+  // Direction arrow in spot
+  ctx.strokeStyle = isParked ? 'rgba(34,197,94,0.4)' : 'rgba(245,197,24,0.2)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, spot.h/2 - 12);
+  ctx.lineTo(0, -spot.h/2 + 12);
+  ctx.moveTo(-6, -spot.h/2 + 20);
+  ctx.lineTo(0, -spot.h/2 + 12);
+  ctx.lineTo(6, -spot.h/2 + 20);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+function drawCar(x, y, angle, color, isPlayer, damage = 0) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+
+  const w = CAR_W, h = CAR_H;
+  const hw = w / 2, hh = h / 2;
+
+  // ── WHEELS (behind body) ──
+  const ww = 9, wh = 16; // wheel width/height
+  const wheelOffX = hw + 2;
+  const wheelFrontY = -hh + 18;
+  const wheelRearY  =  hh - 18;
+  const wheelPositions = [
+    [-wheelOffX, wheelFrontY], [hw - 2, wheelFrontY],
+    [-wheelOffX, wheelRearY],  [hw - 2, wheelRearY],
+  ];
+  wheelPositions.forEach(([wx, wy]) => {
+    // Tyre
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.roundRect(wx, wy - wh/2, ww, wh, 3); ctx.fill();
+    // Rim
+    ctx.fillStyle = '#4a4a4a';
+    ctx.beginPath(); ctx.roundRect(wx + 2, wy - wh/2 + 2, ww - 4, wh - 4, 2); ctx.fill();
+    // Hub
+    ctx.fillStyle = '#888';
+    ctx.beginPath(); ctx.arc(wx + ww/2, wy, 3, 0, Math.PI * 2); ctx.fill();
+  });
+
+  // ── BODY ──
+  const bodyGrad = ctx.createLinearGradient(-hw, -hh, hw, hh);
+  bodyGrad.addColorStop(0, lighten(color, 0.4));
+  bodyGrad.addColorStop(0.5, color);
+  bodyGrad.addColorStop(1, darken(color, 0.2));
+  ctx.fillStyle = bodyGrad;
+  ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.fill();
+
+  // Body panel lines (door seams)
+  ctx.strokeStyle = darken(color, 0.3);
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  // Door line horizontal
+  ctx.beginPath(); ctx.moveTo(-hw + 3, 0); ctx.lineTo(hw - 3, 0); ctx.stroke();
+  // Vertical door gaps
+  ctx.beginPath(); ctx.moveTo(-hw + 5, -hh + 22); ctx.lineTo(-hw + 5, hh - 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(hw - 5, -hh + 22); ctx.lineTo(hw - 5, hh - 14); ctx.stroke();
+
+  // ── ROOF ──
+  const roofGrad = ctx.createLinearGradient(-hw + 5, -hh + 14, hw - 5, -hh + 14 + h * 0.42);
+  roofGrad.addColorStop(0, darken(color, 0.5));
+  roofGrad.addColorStop(1, darken(color, 0.35));
+  ctx.fillStyle = roofGrad;
+  ctx.beginPath(); ctx.roundRect(-hw + 5, -hh + 14, w - 10, h * 0.42, 4); ctx.fill();
+
+  // ── WINDSHIELD (front) ──
+  ctx.fillStyle = 'rgba(180,220,255,0.45)';
+  ctx.beginPath(); ctx.roundRect(-hw + 6, -hh + 16, w - 12, 16, 3); ctx.fill();
+  // Reflection
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.beginPath(); ctx.roundRect(-hw + 8, -hh + 17, (w - 16) * 0.4, 6, 2); ctx.fill();
+
+  // ── REAR WINDOW ──
+  ctx.fillStyle = 'rgba(140,190,230,0.3)';
+  ctx.beginPath(); ctx.roundRect(-hw + 6, hh - 28, w - 12, 14, 3); ctx.fill();
+
+  // ── SIDE WINDOWS ──
+  ctx.fillStyle = 'rgba(160,210,240,0.25)';
+  // Left window
+  ctx.beginPath(); ctx.roundRect(-hw + 2, -hh + 22, 4, h * 0.38, 2); ctx.fill();
+  // Right window
+  ctx.beginPath(); ctx.roundRect(hw - 6, -hh + 22, 4, h * 0.38, 2); ctx.fill();
+
+  // ── HEADLIGHTS ──
+  ctx.fillStyle = isPlayer ? '#fffde7' : '#fef3c7';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 3, 10, 7, 2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(hw - 14, -hh + 3, 10, 7, 2); ctx.fill();
+  // Glow
+  if (isPlayer) {
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    const hgrd = ctx.createRadialGradient(-hw + 9, -hh, 0, -hw + 9, -hh, 22);
+    hgrd.addColorStop(0, '#fff8c0'); hgrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = hgrd;
+    ctx.beginPath(); ctx.arc(-hw + 9, -hh, 22, 0, Math.PI * 2); ctx.fill();
+    const hgrd2 = ctx.createRadialGradient(hw - 9, -hh, 0, hw - 9, -hh, 22);
+    hgrd2.addColorStop(0, '#fff8c0'); hgrd2.addColorStop(1, 'transparent');
+    ctx.fillStyle = hgrd2;
+    ctx.beginPath(); ctx.arc(hw - 9, -hh, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+
+  // ── TAILLIGHTS ──
+  ctx.fillStyle = '#dc2626';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, hh - 9, 10, 6, 2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(hw - 14, hh - 9, 10, 6, 2); ctx.fill();
+  // Brake glow when reversing
+  ctx.fillStyle = 'rgba(220,38,38,0.15)';
+  ctx.beginPath(); ctx.ellipse(-hw + 9, hh, 12, 8, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(hw - 9, hh, 12, 8, 0, 0, Math.PI * 2); ctx.fill();
+
+  // ── GRILLE ──
+  ctx.fillStyle = darken(color, 0.6);
+  ctx.beginPath(); ctx.roundRect(-hw + 6, -hh + 2, w - 12, 5, 2); ctx.fill();
+  // Grille lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 1;
+  for (let gi = -hw + 8; gi < hw - 6; gi += 5) {
+    ctx.beginPath(); ctx.moveTo(gi, -hh + 2); ctx.lineTo(gi, -hh + 7); ctx.stroke();
+  }
+
+  // ── ROOF SHINE ──
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath(); ctx.ellipse(-hw/4, -hh + 20, hw * 0.5, 5, -0.3, 0, Math.PI * 2); ctx.fill();
+
+  // ── DAMAGE CRACKS ──
+  if (damage > 20) {
+    ctx.strokeStyle = `rgba(0,0,0,${Math.min(damage / 100 * 0.9, 0.8)})`;
+    ctx.lineWidth = 1.5;
+    if (damage > 20) {
+      ctx.beginPath(); ctx.moveTo(-w/4, -h/4); ctx.lineTo(-w/8, -h/8); ctx.lineTo(w/6, -h/5); ctx.stroke();
+    }
+    if (damage > 40) {
+      ctx.beginPath(); ctx.moveTo(w/4, h/5); ctx.lineTo(w/8, h/3); ctx.lineTo(0, h/4); ctx.stroke();
+    }
+    if (damage > 60) {
+      ctx.beginPath(); ctx.moveTo(-w/3, h/4); ctx.lineTo(-w/5, h/3); ctx.lineTo(-w/8, h/2 - 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(w/3, -h/5); ctx.lineTo(w/5, 0); ctx.stroke();
+    }
+    if (damage > 80) {
+      ctx.fillStyle = 'rgba(200,50,50,0.25)';
+      ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.fill();
+    }
+  }
+
+  // ── PLAYER OUTLINE ──
+  if (isPlayer) {
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.stroke();
+  }
+
+  ctx.restore();
+}
+
+function drawProximityGuide(car, spot) {
+  const dx = spot.x - car.x;
+  const dy = spot.y - car.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist < 120 || dist > 600) return;
+
+  const arrowAngle = Math.atan2(dx, -dy);
+  const opacity = Math.min((dist - 100) / 200, 0.6);
+
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(arrowAngle);
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = '#f5c518';
+  ctx.beginPath();
+  ctx.moveTo(0, -50);
+  ctx.lineTo(-6, -40);
+  ctx.lineTo(6, -40);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function lighten(hex, amount) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.min(255,r+r*amount)},${Math.min(255,g+g*amount)},${Math.min(255,b+b*amount)})`;
+}
+
+function darken(hex, amount) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgb(${Math.max(0,r-r*amount)},${Math.max(0,g-g*amount)},${Math.max(0,b-b*amount)})`;
+}
+
+// ══════════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════════
+const game = {
+  running: false,
+  paused: false,
+  levels: [],
+  levelIndex: 0,
+  car: null,
+  carColor: '#f5c518',
+  keys: {},
+  score: 0,
+  crashes: 0,
+  timeLeft: 60,
+  timerInterval: null,
+  animFrame: null,
+  lastTime: 0,
+  parkTimer: 0, // how long car has been parked
+  attempts: 3,
+  attemptsUsed: 0,
+  bestGrade: null,
+  totalLevels: 0,
+};
+
+const GRADE_ORDER = ['S','A','B','C','F'];
+
+function updateBestGrade(g) {
+  if (!game.bestGrade) { game.bestGrade = g; return; }
+  const ci = GRADE_ORDER.indexOf(g);
+  const bi = GRADE_ORDER.indexOf(game.bestGrade);
+  if (ci < bi) game.bestGrade = g;
+}
+
+// ══════════════════════════════════════════
+// GAME LOOP
+// ══════════════════════════════════════════
+function gameLoop(timestamp) {
+  if (!game.running || game.paused) return;
+
+  const dt = Math.min(timestamp - game.lastTime, 32);
+  game.lastTime = timestamp;
+
+  const level = game.levels[game.levelIndex];
+  const car = game.car;
+
+  // Update car physics
+  updateCar(car, game.keys, dt);
+
+  // Boundary — keep car on canvas
+  car.x = Math.max(CAR_W, Math.min(canvas.width - CAR_W, car.x));
+  car.y = Math.max(CAR_H, Math.min(canvas.height - CAR_H, car.y));
+
+  // Collision with parked cars
+  let collided = false;
+  level.parkedCars.forEach(pc => {
+    if (checkCarCollision(car, pc.x, pc.y, pc.angle, CAR_W + 14, CAR_H + 2)) {
+      collided = true;
+    }
+  });
+
+  // Collision with walls
+  if (level.walls) {
+    level.walls.forEach(wall => {
+      if (checkWallCollision(car, wall)) collided = true;
+    });
+  }
+
+  if (collided && Math.abs(car.speed) > 0.3) {
+    car.damage = Math.min(car.damage + Math.abs(car.speed) * 6, 100);
+    car.speed *= -0.4; // bounce back
+    game.crashes++;
+    if (car.damage >= 100) {
+      failLevel('Car totalled!');
+      return;
+    }
+  }
+
+  // Check parked
+  const check = checkParked(car, level.spot);
+  if (check.posOk && check.angleOk && check.stopped) {
+    game.parkTimer += dt;
+    if (game.parkTimer > 800) { // parked for 0.8s
+      successLevel(check);
+      return;
+    }
+  } else {
+    game.parkTimer = 0;
+  }
+
+  // Update sidebar
+  updateSidebar(check, car);
+
+  drawScene();
+  game.animFrame = requestAnimationFrame(gameLoop);
+}
+
+function updateSidebar(check, car) {
+  // Score
+  document.getElementById('sb-score').textContent = game.score;
+
+  // Damage bar
+  const health = Math.max(0, 100 - car.damage);
+  const bar = document.getElementById('damage-bar');
+  bar.style.width = health + '%';
+  bar.style.background = health > 60 ? '#22c55e' : health > 30 ? '#f97316' : '#ef4444';
+  document.getElementById('damage-text').textContent =
+    health > 80 ? 'Perfect' : health > 60 ? 'Scratched' : health > 30 ? 'Damaged' : 'Critical!';
+
+  // Alignment
+  function setAlign(id, textId, ok, label) {
+    const el = document.getElementById(id);
+    const tel = document.getElementById(textId);
+    el.className = 'align-dot ' + (ok === true ? 'ok' : ok === false ? 'bad' : 'warn');
+    tel.textContent = label;
+  }
+
+  setAlign('align-pos', 'align-pos-text',
+    check.dist < 15 ? true : check.dist < 40 ? null : false,
+    `Position ${Math.round(check.dist)}px`);
+
+  setAlign('align-angle', 'align-angle-text',
+    check.angleDiff < 0.1 ? true : check.angleDiff < 0.3 ? null : false,
+    `Angle ${Math.round(check.angleDiff * 180 / Math.PI)}°`);
+
+  setAlign('align-speed', 'align-speed-text',
+    check.speed < 0.1 ? true : check.speed < 0.5 ? null : false,
+    check.speed < 0.1 ? 'Stopped' : 'Moving');
+
+  // Steering wheel
+  const steerDeg = (car.steer / STEER_MAX) * 180;
+  document.getElementById('steering-wheel').style.transform = `rotate(${steerDeg}deg)`;
+}
+
+// ══════════════════════════════════════════
+// LEVEL MANAGEMENT
+// ══════════════════════════════════════════
+function loadLevel(index) {
+  if (index >= game.levels.length) {
+    endGame();
+    return;
+  }
+
+  game.levelIndex = index;
+  game.parkTimer = 0;
+  game.paused = false;
+
+  const level = game.levels[index];
+  game.car = createCar(level.start.x, level.start.y, level.start.angle);
+  game.timeLeft = level.timeLimit;
+  game.attempts = 3;
+  game.attemptsUsed = 0;
+
+  // Update sidebar labels
+  document.getElementById('sb-level').textContent = index + 1;
+  document.getElementById('sb-type').textContent = level.typeIcon + ' ' + level.type;
+  document.getElementById('sb-timer').textContent = game.timeLeft;
+
+  updateAttempts();
+  hideOverlays();
+
+  // Start timer
+  clearInterval(game.timerInterval);
+  game.timerInterval = setInterval(() => {
+    if (game.paused) return;
+    game.timeLeft--;
+    const timerEl = document.getElementById('sb-timer');
+    timerEl.textContent = game.timeLeft;
+    timerEl.className = 'timer-val' + (game.timeLeft <= 10 ? ' urgent' : '');
+    if (game.timeLeft <= 0) failLevel('Time\'s up!');
+  }, 1000);
+
+  // Start game loop
+  if (game.animFrame) cancelAnimationFrame(game.animFrame);
+  game.running = true;
+  game.lastTime = performance.now();
+  game.animFrame = requestAnimationFrame(gameLoop);
+}
+
+function successLevel(check) {
+  game.running = false;
+  clearInterval(game.timerInterval);
+  if (game.animFrame) cancelAnimationFrame(game.animFrame);
+
+  const grade = parkingGrade(check, game.timeLeft, game.levels[game.levelIndex].timeLimit, game.car.damage);
+  const points = gradePoints(grade);
+  game.score += points;
+  game.totalLevels++;
+  updateBestGrade(grade);
+
+  drawScene();
+
+  // Show overlay
+  const el = document.getElementById('overlay-success');
+  const gradeEl = document.getElementById('overlay-grade');
+  gradeEl.textContent = grade;
+  gradeEl.className = `grade-badge grade-${grade}`;
+  document.getElementById('overlay-success-title').textContent =
+    grade === 'S' ? 'Perfect!' : grade === 'A' ? 'Excellent!' : grade === 'B' ? 'Good Park!' : 'Parked!';
+  document.getElementById('overlay-success-sub').textContent =
+    `Level ${game.levelIndex + 1} complete • +${points} points`;
+  document.getElementById('overlay-success-score').textContent = `+${points}`;
+  el.classList.remove('hidden');
+
+  document.getElementById('sb-score').textContent = game.score;
+}
+
+function failLevel(reason) {
+  game.running = false;
+  clearInterval(game.timerInterval);
+  if (game.animFrame) cancelAnimationFrame(game.animFrame);
+
+  game.attemptsUsed++;
+  updateAttempts();
+
+  drawScene();
+
+  const el = document.getElementById('overlay-fail');
+  document.getElementById('overlay-fail-title').textContent =
+    game.attemptsUsed >= 3 ? 'Level Failed' : 'Try Again';
+  document.getElementById('overlay-fail-sub').textContent = reason +
+    (game.attemptsUsed < 3 ? ` — ${3 - game.attemptsUsed} attempt(s) left` : ' — Moving on');
+  el.classList.remove('hidden');
+}
+
+function retryLevel() {
+  if (game.attemptsUsed >= 3) {
+    nextLevel();
+    return;
+  }
+  loadLevel(game.levelIndex);
+}
+
+function nextLevel() {
+  loadLevel(game.levelIndex + 1);
+}
+
+function updateAttempts() {
+  const el = document.getElementById('attempts-icons');
+  el.innerHTML = Array.from({length: 3}, (_, i) =>
+    `<span class="attempt-icon ${i < game.attemptsUsed ? 'used' : ''}">🚗</span>`
+  ).join('');
+}
+
+function hideOverlays() {
+  ['overlay-success', 'overlay-fail', 'overlay-pause'].forEach(id => {
+    document.getElementById(id).classList.add('hidden');
+  });
+}
+
+function togglePause() {
+  game.paused = !game.paused;
+  const el = document.getElementById('overlay-pause');
+  if (game.paused) {
+    el.classList.remove('hidden');
+    if (game.animFrame) cancelAnimationFrame(game.animFrame);
+  } else {
+    el.classList.add('hidden');
+    game.lastTime = performance.now();
+    game.animFrame = requestAnimationFrame(gameLoop);
+  }
+}
+
+function endGame() {
+  clearInterval(game.timerInterval);
+  if (game.animFrame) cancelAnimationFrame(game.animFrame);
+
+  document.getElementById('final-score').textContent = game.score;
+  document.getElementById('res-levels').textContent = game.totalLevels;
+  document.getElementById('res-best').textContent = game.bestGrade || '—';
+  document.getElementById('res-crashes').textContent = game.crashes;
+
+  showScreen('screen-result');
+  loadLeaderboard('lb-result');
+}
+
+function goToMenu() {
+  clearInterval(game.timerInterval);
+  if (game.animFrame) cancelAnimationFrame(game.animFrame);
+  game.running = false;
+  showScreen('screen-start');
+  loadLeaderboard('lb-start');
+}
+
+// ══════════════════════════════════════════
+// INPUT
+// ══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  game.keys[e.code] = true;
+  if (e.code === 'KeyP') togglePause();
+  if (e.code === 'KeyR' && game.running) {
+    hideOverlays();
+    loadLevel(game.levelIndex);
+  }
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code)) {
+    e.preventDefault();
+  }
+});
+
+document.addEventListener('keyup', e => {
+  game.keys[e.code] = false;
+});
+
+// ══════════════════════════════════════════
+// SCREENS
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  game.levels = buildLevels();
+  game.score = 0;
+  game.crashes = 0;
+  game.totalLevels = 0;
+  game.bestGrade = null;
+  game.keys = {};
+  showScreen('screen-game');
+  loadLevel(0);
+}
+
+// ══════════════════════════════════════════
+// LEADERBOARD API
+// ══════════════════════════════════════════
+async function loadLeaderboard(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  try {
+    const res = await fetch('/api/scores?limit=8');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    if (!data.length) { el.innerHTML = '<div class="lb-empty">No scores yet</div>'; return; }
+    const medals = ['gold','silver','bronze'];
+    el.innerHTML = data.map((s, i) => `
+      <div class="lb-entry">
+        <span class="lb-pos ${medals[i]||''}">#${i+1}</span>
+        <span class="lb-name">${esc(s.player_name)}</span>
+        <span class="lb-score">${s.score}</span>
+      </div>
+    `).join('');
+  } catch {
+    el.innerHTML = '<div class="lb-empty">Offline</div>';
+  }
+}
+
+async function saveScore() {
+  const name = document.getElementById('res-name').value.trim() || 'Driver';
+  const msg = document.getElementById('res-msg');
+  msg.textContent = 'Saving...';
+  try {
+    const res = await fetch('/api/scores', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ player_name: name, score: game.score })
+    });
+    if (res.ok) {
+      msg.textContent = '✓ Score saved!';
+      loadLeaderboard('lb-result');
+    } else {
+      msg.textContent = 'Error saving score.';
+    }
+  } catch {
+    msg.textContent = 'Server offline.';
+  }
+}
+
+function esc(s) {
+  return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Init
+loadLeaderboard('lb-start');
+</script>
+</body>
+</html>

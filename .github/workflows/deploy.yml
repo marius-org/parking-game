@@ -1,0 +1,36 @@
+name: Deploy Parking Game
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: control-node
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            mariuseu/parking-game:latest
+            mariuseu/parking-game:${{ github.run_number }}
+
+      - name: Deploy to k3s
+        run: |
+          kubectl set image deployment/parking-game \
+            parking-game=mariuseu/parking-game:${{ github.run_number }} \
+            -n parking-game
+          kubectl rollout status deployment/parking-game \
+            -n parking-game --timeout=120s
