@@ -1231,161 +1231,367 @@ function drawScene() {
   const cx = W / 2, cy = H / 2;
   const li = game.levelIndex;
 
-  // ── GROUND ──
+  // ══ TIMIȘOARA ENVIRONMENT ══
+
+  // ── COBBLESTONE GROUND ──
+  // Base asphalt / stone
   ctx.fillStyle = level.roadColor;
   ctx.fillRect(0, 0, W, H);
 
-  // Asphalt texture — fine grain
-  ctx.fillStyle = 'rgba(0,0,0,0.18)';
+  // Cobblestone grid pattern — Unirii Square feel
   const rng = seededRand(li * 999 + 1);
-  for (let i = 0; i < 600; i++) {
-    const gx = rng() * W, gy = rng() * H, gs = rng() * 3 + 1;
-    ctx.fillRect(gx, gy, gs, gs);
+  const stoneW = 18, stoneH = 14;
+  for (let sx = 0; sx < W; sx += stoneW) {
+    for (let sy = 0; sy < H; sy += stoneH) {
+      const offset = (Math.floor(sy / stoneH) % 2) * (stoneW / 2);
+      const shade = rng() * 0.06;
+      ctx.fillStyle = `rgba(${sy < 60 || sy > H-60 || sx < 60 || sx > W-60 ? 200 : 180},${sy < 60 || sy > H-60 || sx < 60 || sx > W-60 ? 185 : 165},${sy < 60 || sy > H-60 || sx < 60 || sx > W-60 ? 155 : 140},${0.08 + shade})`;
+      ctx.fillRect(sx + offset, sy, stoneW - 1, stoneH - 1);
+    }
   }
 
-  // ── ROAD LANES ──
-  // Main driving lane — dashed center line
-  ctx.setLineDash([28, 20]);
-  ctx.strokeStyle = 'rgba(245,197,24,0.18)';
+  // ── BEGA CANAL — runs along top edge ──
+  const canalY = 0;
+  const canalH = 55;
+  // Water gradient
+  const waterGrad = ctx.createLinearGradient(0, canalY, 0, canalY + canalH);
+  waterGrad.addColorStop(0, '#1a3a5c');
+  waterGrad.addColorStop(0.4, '#1e4976');
+  waterGrad.addColorStop(1, '#16375a');
+  ctx.fillStyle = waterGrad;
+  ctx.fillRect(0, canalY, W, canalH);
+
+  // Water ripples
+  ctx.strokeStyle = 'rgba(100,170,220,0.2)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([12, 8]);
+  for (let wy = canalY + 12; wy < canalY + canalH - 8; wy += 10) {
+    ctx.beginPath(); ctx.moveTo(20, wy); ctx.lineTo(W - 20, wy); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+
+  // Canal text label
+  ctx.fillStyle = 'rgba(100,180,230,0.35)';
+  ctx.font = 'italic 11px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('~ Canalul Bega ~', cx, canalY + 32);
+
+  // Canal banks / quay edge
+  ctx.fillStyle = '#c4a882';
+  ctx.fillRect(0, canalY + canalH - 5, W, 8);
+  // Quay stones
+  ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+  ctx.lineWidth = 1;
+  for (let qx = 0; qx < W; qx += 22) {
+    ctx.beginPath(); ctx.moveTo(qx, canalY + canalH - 5); ctx.lineTo(qx, canalY + canalH + 3); ctx.stroke();
+  }
+
+  // ── PAVEMENT STRIPS — Habsburg limestone color ──
+  // Left sidewalk
+  ctx.fillStyle = '#c8b89a';
+  ctx.fillRect(0, canalH, 58, H - canalH);
+  // Right sidewalk
+  ctx.fillRect(W - 58, canalH, 58, H - canalH);
+  // Bottom sidewalk
+  ctx.fillRect(0, H - 58, W, 58);
+
+  // Sidewalk tile grid
+  ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+  ctx.lineWidth = 0.8;
+  for (let px = 0; px < W; px += 20) {
+    ctx.beginPath(); ctx.moveTo(px, canalH); ctx.lineTo(px, H); ctx.stroke();
+  }
+  for (let py = canalH; py < H; py += 20) {
+    ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+  }
+
+  // Curb edges
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)';
   ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(58, canalH); ctx.lineTo(58, H - 58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W - 58, canalH); ctx.lineTo(W - 58, H - 58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, H - 58); ctx.lineTo(W, H - 58); ctx.stroke();
+
+  // ── TRAM TRACKS — Timișoara had first electric tram in Europe 1884 ──
+  ctx.strokeStyle = 'rgba(120,100,80,0.55)';
+  ctx.lineWidth = 3;
   ctx.setLineDash([]);
-
-  // ── PAVEMENT / SIDEWALK STRIPS ──
-  // Top and bottom curb zones
-  ctx.fillStyle = '#2a2d32';
-  ctx.fillRect(0, 0, W, 60);
-  ctx.fillRect(0, H - 60, W, 60);
-  ctx.fillRect(0, 0, 60, H);
-  ctx.fillRect(W - 60, 0, 60, H);
-
-  // Curb edge lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  // Two tracks running horizontally through center
+  ctx.beginPath(); ctx.moveTo(0, cy - 14); ctx.lineTo(W, cy - 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, cy + 14); ctx.lineTo(W, cy + 14); ctx.stroke();
+  // Rail shine
+  ctx.strokeStyle = 'rgba(180,160,130,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, cy - 14); ctx.lineTo(W, cy - 14); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, cy + 14); ctx.lineTo(W, cy + 14); ctx.stroke();
+  // Sleepers / ties
+  ctx.strokeStyle = 'rgba(80,60,40,0.4)';
   ctx.lineWidth = 2;
+  for (let tx = 40; tx < W; tx += 28) {
+    ctx.beginPath(); ctx.moveTo(tx, cy - 20); ctx.lineTo(tx, cy + 20); ctx.stroke();
+  }
+
+  // Tram label
+  ctx.fillStyle = 'rgba(160,130,100,0.4)';
+  ctx.font = 'bold 9px sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('LINIA 1', 70, cy - 18);
+
+  // ── ROAD DASHES ──
+  ctx.setLineDash([24, 18]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(cx, canalH); ctx.lineTo(cx, H); ctx.stroke();
   ctx.setLineDash([]);
-  ctx.strokeRect(60, 60, W - 120, H - 120);
 
-  // ── TREES (green circles with shadow) ──
-  const treeRng = seededRand(li * 7 + 42);
-  const treePositions = [
-    [80, 80], [W - 80, 80], [80, H - 80], [W - 80, H - 80],
-    [cx - 280, 80], [cx + 280, 80],
-    [cx - 280, H - 80], [cx + 280, H - 80],
-    [80, cy - 200], [80, cy + 200],
-    [W - 80, cy - 200], [W - 80, cy + 200],
-  ];
-  treePositions.forEach(([tx, ty]) => {
-    const r = 22 + treeRng() * 8;
-    // Shadow
-    ctx.save();
-    ctx.globalAlpha = 0.25;
-    ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.ellipse(tx + 6, ty + 6, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.restore();
-    // Trunk
-    ctx.fillStyle = '#5a3e28';
-    ctx.beginPath(); ctx.ellipse(tx, ty, 6, 8, 0, 0, Math.PI * 2); ctx.fill();
-    // Crown outer
-    ctx.fillStyle = '#1a5c2a';
-    ctx.beginPath(); ctx.arc(tx, ty - 4, r, 0, Math.PI * 2); ctx.fill();
-    // Crown inner highlight
-    ctx.fillStyle = '#22763a';
-    ctx.beginPath(); ctx.arc(tx - 4, ty - 8, r * 0.6, 0, Math.PI * 2); ctx.fill();
-    // Crown top shine
-    ctx.fillStyle = '#2d9e50';
-    ctx.beginPath(); ctx.arc(tx - 6, ty - 10, r * 0.3, 0, Math.PI * 2); ctx.fill();
-  });
-
-  // ── BENCHES / BOLLARDS along sidewalk ──
-  const bollardRng = seededRand(li * 13 + 77);
-  const bollardPositions = [
-    [cx - 160, 40], [cx, 40], [cx + 160, 40],
-    [cx - 160, H - 40], [cx, H - 40], [cx + 160, H - 40],
-    [40, cy - 120], [40, cy], [40, cy + 120],
-    [W - 40, cy - 120], [W - 40, cy], [W - 40, cy + 120],
-  ];
-  bollardPositions.forEach(([bx, by]) => {
+  // ── HABSBURG BUILDINGS — top-down rooftops on sidewalks ──
+  // These are the iconic yellow/ochre Austro-Hungarian facades
+  function drawBuilding(bx, by, bw, bh, roofColor, facadeColor) {
     // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath(); ctx.ellipse(bx + 3, by + 3, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
-    // Bollard body
-    ctx.fillStyle = '#f5c518';
-    ctx.beginPath(); ctx.arc(bx, by, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(bx + 4, by + 4, bw, bh);
+    // Facade (wall color visible from top = rooftop)
+    const bgrad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+    bgrad.addColorStop(0, lighten(roofColor, 0.2));
+    bgrad.addColorStop(1, darken(roofColor, 0.2));
+    ctx.fillStyle = bgrad;
+    ctx.fillRect(bx, by, bw, bh);
+    // Terracotta roof tiles — horizontal lines
+    ctx.strokeStyle = darken(roofColor, 0.3);
+    ctx.lineWidth = 1;
+    for (let ty = by + 5; ty < by + bh; ty += 5) {
+      ctx.beginPath(); ctx.moveTo(bx, ty); ctx.lineTo(bx + bw, ty); ctx.stroke();
+    }
+    // Ridge line at top
+    ctx.strokeStyle = darken(roofColor, 0.5);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(bx, by + 2); ctx.lineTo(bx + bw, by + 2); ctx.stroke();
+    // Windows (dark squares visible on rooftop in top-down)
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    const winSpacing = 16;
+    for (let wx = bx + 6; wx < bx + bw - 8; wx += winSpacing) {
+      ctx.fillRect(wx, by + bh * 0.3, 7, 5);
+      ctx.fillRect(wx, by + bh * 0.65, 7, 5);
+    }
+    // Building outline
+    ctx.strokeStyle = darken(roofColor, 0.4);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(bx, by, bw, bh);
+  }
+
+  // Left side buildings — ochre yellow Habsburg style
+  const ochreDark  = '#c8962a';
+  const ochreLight = '#d4aa4a';
+  const terracotta = '#b85c38';
+  const cream      = '#d4c49a';
+
+  // Left column of buildings
+  drawBuilding(2,       canalH + 4,  50, 90,  ochreDark,  ochreDark);
+  drawBuilding(2,       canalH + 100, 50, 80, ochreLight, ochreLight);
+  drawBuilding(2,       canalH + 190, 50, 100, terracotta, terracotta);
+  drawBuilding(2,       canalH + 300, 50, 80, cream, cream);
+  drawBuilding(2,       H - 200,     50, 100, ochreDark, ochreDark);
+
+  // Right column of buildings
+  drawBuilding(W - 52, canalH + 4,   50, 90,  ochreLight, ochreLight);
+  drawBuilding(W - 52, canalH + 100, 50, 80,  terracotta, terracotta);
+  drawBuilding(W - 52, canalH + 190, 50, 100, cream, cream);
+  drawBuilding(W - 52, canalH + 300, 50, 80,  ochreDark, ochreDark);
+  drawBuilding(W - 52, H - 200,      50, 100, ochreLight, ochreLight);
+
+  // Bottom row buildings
+  drawBuilding(70,      H - 52,  90,  46, terracotta, terracotta);
+  drawBuilding(180,     H - 52,  80,  46, ochreDark,  ochreDark);
+  drawBuilding(280,     H - 52,  100, 46, ochreLight, ochreLight);
+  drawBuilding(W-170,   H - 52,  90,  46, cream, cream);
+  drawBuilding(W-280,   H - 52,  100, 46, terracotta, terracotta);
+
+  // ── ORTHODOX CATHEDRAL SILHOUETTE — top right corner ──
+  // Iconic Timișoara Cathedral seen from above (simplified top-down)
+  const catX = W - 52, catY = canalH + 2;
+  // Main nave roof (dark terracotta)
+  ctx.fillStyle = '#8b2500';
+  ctx.fillRect(catX + 2, catY + 2, 46, 86);
+  // Tile lines
+  ctx.strokeStyle = '#6a1c00';
+  ctx.lineWidth = 1;
+  for (let ct = catY + 6; ct < catY + 88; ct += 5) {
+    ctx.beginPath(); ctx.moveTo(catX + 2, ct); ctx.lineTo(catX + 48, ct); ctx.stroke();
+  }
+  // Central dome (circle)
+  ctx.fillStyle = '#2d5c8a';
+  ctx.beginPath(); ctx.arc(catX + 25, catY + 44, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#1a3a5c';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(catX + 25, catY + 44, 14, 0, Math.PI * 2); ctx.stroke();
+  // Gold dome cross
+  ctx.fillStyle = '#d4a820';
+  ctx.beginPath(); ctx.arc(catX + 25, catY + 44, 5, 0, Math.PI * 2); ctx.fill();
+  // Two side towers
+  ctx.fillStyle = '#2d5c8a';
+  ctx.beginPath(); ctx.arc(catX + 10, catY + 16, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(catX + 40, catY + 16, 7, 0, Math.PI * 2); ctx.fill();
+  // Tower crosses
+  ctx.fillStyle = '#d4a820';
+  ctx.beginPath(); ctx.arc(catX + 10, catY + 16, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(catX + 40, catY + 16, 2.5, 0, Math.PI * 2); ctx.fill();
+  // Cathedral label
+  ctx.fillStyle = 'rgba(212,168,32,0.5)';
+  ctx.font = 'bold 7px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('CATEDRALA', catX + 25, catY + 96);
+
+  // ── LINDEN TREES — Timișoara is famous for its linden-lined boulevards ──
+  const treeRng = seededRand(li * 7 + 42);
+  const lindenPositions = [
+    // Along Bega canal bank
+    [100, canalH + 18], [180, canalH + 18], [260, canalH + 18],
+    [cx - 60, canalH + 18], [cx + 60, canalH + 18],
+    [W - 100, canalH + 18], [W - 180, canalH + 18], [W - 260, canalH + 18],
+    // Left boulevard row
+    [35, cy - 220], [35, cy - 120], [35, cy], [35, cy + 120], [35, cy + 220],
+    // Right boulevard row
+    [W - 35, cy - 220], [W - 35, cy - 120], [W - 35, cy], [W - 35, cy + 120], [W - 35, cy + 220],
+    // Bottom boulevard
+    [cx - 200, H - 35], [cx - 80, H - 35], [cx + 80, H - 35], [cx + 200, H - 35],
+  ];
+  lindenPositions.forEach(([tx, ty]) => {
+    const r = 18 + treeRng() * 7;
+    // Shadow
+    ctx.save(); ctx.globalAlpha = 0.22;
     ctx.fillStyle = '#000';
-    ctx.beginPath(); ctx.arc(bx, by, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(tx + 5, ty + 5, r, r * 0.75, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    // Trunk
+    ctx.fillStyle = '#4a3220';
+    ctx.beginPath(); ctx.ellipse(tx, ty, 5, 6, 0, 0, Math.PI * 2); ctx.fill();
+    // Crown — linden is a lighter green
+    ctx.fillStyle = '#2d6e3a';
+    ctx.beginPath(); ctx.arc(tx, ty - 3, r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3a8a48';
+    ctx.beginPath(); ctx.arc(tx - 3, ty - 6, r * 0.65, 0, Math.PI * 2); ctx.fill();
+    // Spring/summer highlight — linden has distinct light green
+    ctx.fillStyle = '#5db870';
+    ctx.beginPath(); ctx.arc(tx - 5, ty - 9, r * 0.32, 0, Math.PI * 2); ctx.fill();
+    // Tiny yellow flowers (linden bloom — June characteristic)
+    ctx.fillStyle = 'rgba(220,195,60,0.45)';
+    ctx.beginPath(); ctx.arc(tx - 4, ty - 8, r * 0.15, 0, Math.PI * 2); ctx.fill();
   });
 
-  // ── LAMP POSTS ──
+  // ── ORNATE LAMP POSTS — Habsburg style ──
   const lampPositions = [
-    [cx - 340, cy - 260], [cx + 340, cy - 260],
-    [cx - 340, cy + 260], [cx + 340, cy + 260],
+    [cx - 280, cy - 200], [cx + 280, cy - 200],
+    [cx - 280, cy + 200], [cx + 280, cy + 200],
+    [cx, cy - 260], [cx, cy + 260],
   ];
   lampPositions.forEach(([lx, ly]) => {
-    // Pole
-    ctx.strokeStyle = '#4a5568';
+    // Base pedestal — stone
+    ctx.fillStyle = '#a09070';
+    ctx.beginPath(); ctx.roundRect(lx - 6, ly + 22, 12, 10, 2); ctx.fill();
+    ctx.strokeStyle = '#806050'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(lx - 6, ly + 22, 12, 10, 2); ctx.stroke();
+    // Pole — ornate cast iron, dark green (Habsburg style)
+    ctx.strokeStyle = '#2d3a28';
     ctx.lineWidth = 4;
-    ctx.beginPath(); ctx.moveTo(lx, ly + 30); ctx.lineTo(lx, ly - 10); ctx.stroke();
-    // Arm
-    ctx.beginPath(); ctx.moveTo(lx, ly - 10); ctx.lineTo(lx + 16, ly - 18); ctx.stroke();
-    // Light glow
-    ctx.save();
-    ctx.globalAlpha = 0.15;
-    const grd = ctx.createRadialGradient(lx + 16, ly - 18, 0, lx + 16, ly - 18, 60);
-    grd.addColorStop(0, '#fff8c0');
-    grd.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.moveTo(lx, ly + 22); ctx.lineTo(lx, ly - 8); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#3a4a34';
+    ctx.beginPath(); ctx.moveTo(lx, ly + 22); ctx.lineTo(lx, ly - 8); ctx.stroke();
+    // Decorative bracket
+    ctx.strokeStyle = '#2d3a28';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(lx, ly - 8);
+    ctx.bezierCurveTo(lx, ly - 16, lx + 10, ly - 16, lx + 14, ly - 20);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(lx, ly - 8);
+    ctx.bezierCurveTo(lx, ly - 16, lx - 10, ly - 16, lx - 14, ly - 20);
+    ctx.stroke();
+    // Warm glow — sodium lamp color (old street lights)
+    ctx.save(); ctx.globalAlpha = 0.18;
+    const grd = ctx.createRadialGradient(lx, ly - 8, 0, lx, ly - 8, 70);
+    grd.addColorStop(0, '#ffdd80'); grd.addColorStop(1, 'transparent');
     ctx.fillStyle = grd;
-    ctx.beginPath(); ctx.arc(lx + 16, ly - 18, 60, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(lx, ly - 8, 70, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
-    // Lamp head
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(lx + 8, ly - 22, 18, 8);
-    ctx.fillStyle = '#fef9c3';
-    ctx.fillRect(lx + 10, ly - 20, 14, 5);
-    // Base
-    ctx.fillStyle = '#374151';
-    ctx.beginPath(); ctx.ellipse(lx, ly + 30, 8, 5, 0, 0, Math.PI * 2); ctx.fill();
+    // Lamp globe — ornate round globe (not modern rectangular)
+    ctx.fillStyle = '#f0e8b0';
+    ctx.beginPath(); ctx.arc(lx + 14, ly - 20, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(lx - 14, ly - 20, 5, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#2d3a28'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(lx + 14, ly - 20, 5, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(lx - 14, ly - 20, 5, 0, Math.PI * 2); ctx.stroke();
+    // Globe glow
+    ctx.save(); ctx.globalAlpha = 0.5;
+    ctx.fillStyle = '#fff8c0';
+    ctx.beginPath(); ctx.arc(lx + 14, ly - 21, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(lx - 14, ly - 21, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
   });
 
-  // ── PARKED CAR SHADOWS (background layer) ──
+  // ── FLOWER BEDS — Parcul Rozelor style ──
+  const flowerBeds = [
+    [cx - 320, cy - 60, 40, 40],
+    [cx + 280, cy - 60, 40, 40],
+    [cx - 320, cy + 20, 40, 40],
+    [cx + 280, cy + 20, 40, 40],
+  ];
+  flowerBeds.forEach(([fx, fy, fw, fh]) => {
+    // Bed soil
+    ctx.fillStyle = '#5a3e20';
+    ctx.beginPath(); ctx.ellipse(fx + fw/2, fy + fh/2, fw/2, fh/2, 0, 0, Math.PI * 2); ctx.fill();
+    // Flowers — Timișoara roses
+    const flrRng = seededRand(fx + fy);
+    for (let f = 0; f < 12; f++) {
+      const frx = fx + 4 + flrRng() * (fw - 8);
+      const fry = fy + 4 + flrRng() * (fh - 8);
+      const frc = ['#dc2626','#e879f9','#f59e0b','#ffffff','#ff6b9d'][Math.floor(flrRng() * 5)];
+      ctx.fillStyle = frc;
+      ctx.beginPath(); ctx.arc(frx, fry, 2.5 + flrRng() * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // Bed border — low hedge
+    ctx.strokeStyle = '#2d5a20'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(fx + fw/2, fy + fh/2, fw/2, fh/2, 0, 0, Math.PI * 2); ctx.stroke();
+  });
+
+  // ── PARKED CAR SHADOWS ──
   level.parkedCars.forEach(pc => {
     ctx.save();
     ctx.translate(pc.x + 5, pc.y + 5);
     ctx.rotate(pc.angle * Math.PI / 180);
-    ctx.globalAlpha = 0.25;
+    ctx.globalAlpha = 0.22;
     ctx.fillStyle = '#000';
-    ctx.beginPath();
-    ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5);
-    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5); ctx.fill();
     ctx.restore();
   });
 
-  // ── WALLS ──
+  // ── WALLS — with Habsburg plaster look ──
   if (level.walls) {
     level.walls.forEach(wall => {
-      // Wall shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.4)';
-      ctx.fillRect(wall.x + 5, wall.y + 5, wall.w, wall.h);
-      // Wall body
-      const wallGrad = ctx.createLinearGradient(wall.x, wall.y, wall.x, wall.y + wall.h);
-      wallGrad.addColorStop(0, '#3a3f4a');
-      wallGrad.addColorStop(1, '#1a1d22');
-      ctx.fillStyle = wallGrad;
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.fillRect(wall.x + 4, wall.y + 4, wall.w, wall.h);
+      // Plaster wall — ochre/cream tone
+      const wg = ctx.createLinearGradient(wall.x, wall.y, wall.x, wall.y + wall.h);
+      wg.addColorStop(0, '#c8a870');
+      wg.addColorStop(1, '#a88850');
+      ctx.fillStyle = wg;
       ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
-      // Concrete panel lines
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = 2;
-      for (let i = 0; i < wall.w; i += 40) {
+      // Stone joint lines
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < wall.w; i += 30) {
         ctx.beginPath(); ctx.moveTo(wall.x + i, wall.y); ctx.lineTo(wall.x + i, wall.y + wall.h); ctx.stroke();
       }
-      // Top highlight
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(wall.x, wall.y); ctx.lineTo(wall.x + wall.w, wall.y); ctx.stroke();
-      // Pillar caps
-      for (let i = 0; i <= wall.w; i += 40) {
-        ctx.fillStyle = '#f5c518';
-        ctx.fillRect(wall.x + i - 3, wall.y - 3, 6, 6);
+      // Stone pillar caps — stone grey
+      for (let i = 0; i <= wall.w; i += 30) {
+        ctx.fillStyle = '#888070';
+        ctx.fillRect(wall.x + i - 4, wall.y - 4, 8, 8);
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)'; ctx.lineWidth = 1;
+        ctx.strokeRect(wall.x + i - 4, wall.y - 4, 8, 8);
       }
     });
   }
@@ -1393,13 +1599,11 @@ function drawScene() {
   // ── PARKING SPOT ──
   drawParkingSpot(level.spot);
 
-  // ── ROAD MARKINGS — stop line, arrows ──
-  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([10, 10]);
-  // Subtle lane guides
-  ctx.beginPath(); ctx.moveTo(0, cy - 80); ctx.lineTo(W, cy - 80); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, cy + 80); ctx.lineTo(W, cy + 80); ctx.stroke();
+  // ── TRAM OVERHEAD WIRE (visual only) ──
+  ctx.strokeStyle = 'rgba(180,180,160,0.2)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([60, 4]);
+  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
   ctx.setLineDash([]);
 
   // ── PARKED CARS ──
@@ -1411,11 +1615,9 @@ function drawScene() {
   ctx.save();
   ctx.translate(car.x + 6, car.y + 6);
   ctx.rotate(car.angle);
-  ctx.globalAlpha = 0.35;
+  ctx.globalAlpha = 0.3;
   ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5);
-  ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-CAR_W/2, -CAR_H/2, CAR_W, CAR_H, 5); ctx.fill();
   ctx.restore();
 
   // ── PLAYER CAR ──
