@@ -626,7 +626,7 @@ body {
     <h1>
       <span class="like">Park</span>
       <span class="park">Like</span>
-      <span class="pro"> a Pro Driver</span>
+      <span class="pro"> a Pro</span>
     </h1>
     <div class="tagline">Top-down parking simulator</div>
   </div>
@@ -997,22 +997,23 @@ function buildLevels() {
       typeIcon: '🏢',
       bg: '#181818',
       roadColor: '#202020',
-      spot: { x: cx, y: cy + 60, angle: 270, w: 82, h: 148 },
+      spot: { x: cx, y: cy + 80, angle: 90, w: 82, h: 148 },
       parkedCars: [
-        { x: cx - 66, y: cy + 40, angle: 90, color: '#1e293b' },
-        { x: cx + 66, y: cy + 40, angle: 90, color: '#1e293b' },
-        { x: cx - 66, y: cy - 80, angle: 90, color: '#374151' },
-        { x: cx + 66, y: cy - 80, angle: 90, color: '#374151' },
+        { x: cx - 110, y: cy + 80,  angle: 90, color: '#374151' },
+        { x: cx + 110, y: cy + 80,  angle: 90, color: '#374151' },
+        { x: cx - 110, y: cy - 60,  angle: 90, color: '#1e293b' },
+        { x: cx + 110, y: cy - 60,  angle: 90, color: '#1e293b' },
       ],
       walls: [
-        { x: cx - 130, y: cy - 160, w: 20, h: 280 },
-        { x: cx + 110, y: cy - 160, w: 20, h: 280 },
-        { x: cx - 130, y: cy - 160, w: 260, h: 20 },
-        { x: cx - 130, y: cy + 120, w: 260, h: 20 },
+        { x: cx - 170, y: cy - 140, w: 22, h: 300 },
+        { x: cx + 148, y: cy - 140, w: 22, h: 300 },
+        { x: cx - 170, y: cy + 160, w: 340, h: 22 },
+        { x: cx - 170, y: cy - 140, w: 120, h: 22 },
+        { x: cx + 50,  y: cy - 140, w: 120, h: 22 },
       ],
-      start: { x: cx, y: cy - 340, angle: 270 },
-      timeLimit: 75,
-      hint: 'Reverse into narrow garage bay',
+      start: { x: cx, y: cy - 280, angle: 90 },
+      timeLimit: 80,
+      hint: 'Drive in through the entrance, reverse into your bay',
     },
     // Level 9 — Angle in tight lot
     {
@@ -1470,137 +1471,331 @@ function drawCar(x, y, angle, color, isPlayer, damage = 0) {
   const w = CAR_W, h = CAR_H;
   const hw = w / 2, hh = h / 2;
 
-  // ── WHEELS (behind body) ──
-  const ww = 9, wh = 16; // wheel width/height
-  const wheelOffX = hw + 2;
-  const wheelFrontY = -hh + 18;
-  const wheelRearY  =  hh - 18;
-  const wheelPositions = [
-    [-wheelOffX, wheelFrontY], [hw - 2, wheelFrontY],
-    [-wheelOffX, wheelRearY],  [hw - 2, wheelRearY],
+  // ── WHEEL DIMENSIONS ──
+  // E46 style: wide low-profile tyres, multi-spoke alloys
+  const TW = 10, TH = 18; // tyre width / height
+  const RW = 7,  RH = 13; // rim inner
+  // Positions: front wheels slightly inset from front, rear same from back
+  const WFY = -hh + 20; // front axle Y
+  const WRY =  hh - 20; // rear axle Y
+  const WX  =  hw + 1;  // how far out from body edge
+
+  const wheelDefs = [
+    { x: -WX,  y: WFY, front: true  },
+    { x:  WX - TW, y: WFY, front: true  },
+    { x: -WX,  y: WRY, front: false },
+    { x:  WX - TW, y: WRY, front: false },
   ];
-  wheelPositions.forEach(([wx, wy]) => {
-    // Tyre
-    ctx.fillStyle = '#1a1a1a';
-    ctx.beginPath(); ctx.roundRect(wx, wy - wh/2, ww, wh, 3); ctx.fill();
-    // Rim
-    ctx.fillStyle = '#4a4a4a';
-    ctx.beginPath(); ctx.roundRect(wx + 2, wy - wh/2 + 2, ww - 4, wh - 4, 2); ctx.fill();
-    // Hub
-    ctx.fillStyle = '#888';
-    ctx.beginPath(); ctx.arc(wx + ww/2, wy, 3, 0, Math.PI * 2); ctx.fill();
+
+  wheelDefs.forEach(wd => {
+    const cx2 = wd.x + TW / 2, cy2 = wd.y + TH / 2;
+    // Tyre — dark rubber
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.roundRect(wd.x, wd.y - TH/2, TW, TH, 3); ctx.fill();
+    // Rim outer ring
+    ctx.fillStyle = '#555';
+    ctx.beginPath(); ctx.roundRect(wd.x + 1.5, wd.y - RH/2, RW, RH, 2); ctx.fill();
+    // Rim center hub
+    ctx.fillStyle = '#999';
+    ctx.beginPath(); ctx.arc(cx2, wd.y, 2.5, 0, Math.PI * 2); ctx.fill();
+    // 5-spoke alloy spokes
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 1;
+    for (let sp = 0; sp < 5; sp++) {
+      const a = (sp / 5) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(cx2, wd.y);
+      ctx.lineTo(cx2 + Math.cos(a) * 4, wd.y + Math.sin(a) * 5);
+      ctx.stroke();
+    }
+    // Tyre sidewall highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(wd.x, wd.y - TH/2, TW, TH, 3); ctx.stroke();
   });
 
-  // ── BODY ──
-  const bodyGrad = ctx.createLinearGradient(-hw, -hh, hw, hh);
-  bodyGrad.addColorStop(0, lighten(color, 0.4));
-  bodyGrad.addColorStop(0.5, color);
-  bodyGrad.addColorStop(1, darken(color, 0.2));
+  // ── BODY SHAPE — E46 coupe silhouette ──
+  // Wider at rear, slightly tapered front (kidney grille nose)
+  ctx.beginPath();
+  ctx.moveTo(-hw + 4,  -hh);           // front-left nose
+  ctx.lineTo( hw - 4,  -hh);           // front-right nose
+  ctx.quadraticCurveTo( hw + 2, -hh + 6,  hw,  -hh + 10);  // front quarter flare R
+  ctx.lineTo( hw,       hh - 14);      // rear right side
+  ctx.quadraticCurveTo( hw + 1, hh - 4, hw - 3, hh);       // rear quarter R
+  ctx.lineTo(-hw + 3,   hh);           // rear bumper
+  ctx.quadraticCurveTo(-hw - 1, hh - 4, -hw, hh - 14);     // rear quarter L
+  ctx.lineTo(-hw,      -hh + 10);      // front left side
+  ctx.quadraticCurveTo(-hw - 2, -hh + 6, -hw + 4, -hh);    // front quarter flare L
+  ctx.closePath();
+
+  const bodyGrad = ctx.createLinearGradient(-hw, -hh, hw, hh * 0.5);
+  bodyGrad.addColorStop(0,   lighten(color, 0.5));
+  bodyGrad.addColorStop(0.3, lighten(color, 0.15));
+  bodyGrad.addColorStop(0.7, color);
+  bodyGrad.addColorStop(1,   darken(color, 0.3));
   ctx.fillStyle = bodyGrad;
-  ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.fill();
+  ctx.fill();
 
-  // Body panel lines (door seams)
-  ctx.strokeStyle = darken(color, 0.3);
+  // Body edge — subtle outline
+  ctx.strokeStyle = darken(color, 0.5);
   ctx.lineWidth = 1;
-  ctx.setLineDash([]);
-  // Door line horizontal
-  ctx.beginPath(); ctx.moveTo(-hw + 3, 0); ctx.lineTo(hw - 3, 0); ctx.stroke();
-  // Vertical door gaps
-  ctx.beginPath(); ctx.moveTo(-hw + 5, -hh + 22); ctx.lineTo(-hw + 5, hh - 14); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(hw - 5, -hh + 22); ctx.lineTo(hw - 5, hh - 14); ctx.stroke();
+  ctx.stroke();
 
-  // ── ROOF ──
-  const roofGrad = ctx.createLinearGradient(-hw + 5, -hh + 14, hw - 5, -hh + 14 + h * 0.42);
-  roofGrad.addColorStop(0, darken(color, 0.5));
-  roofGrad.addColorStop(1, darken(color, 0.35));
+  // ── HOOD — raised panel with center crease ──
+  // Hood occupies front ~35% of body
+  const hoodH = h * 0.32;
+  const hoodGrad = ctx.createLinearGradient(-hw + 5, -hh, hw - 5, -hh + hoodH);
+  hoodGrad.addColorStop(0, lighten(color, 0.6));
+  hoodGrad.addColorStop(0.4, lighten(color, 0.2));
+  hoodGrad.addColorStop(1, color);
+  ctx.fillStyle = hoodGrad;
+  ctx.beginPath();
+  ctx.roundRect(-hw + 4, -hh + 1, w - 8, hoodH, [3, 3, 0, 0]);
+  ctx.fill();
+
+  // Hood center crease line (E46 power dome)
+  ctx.strokeStyle = darken(color, 0.25);
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-3, -hh + 3);
+  ctx.lineTo(-3, -hh + hoodH - 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(3, -hh + 3);
+  ctx.lineTo(3, -hh + hoodH - 2);
+  ctx.stroke();
+
+  // Hood highlight
+  ctx.fillStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.ellipse(0, -hh + hoodH * 0.4, hw * 0.45, hoodH * 0.22, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // ── BOOT / TRUNK — rear panel ──
+  const trunkH = h * 0.18;
+  const trunkGrad = ctx.createLinearGradient(0, hh - trunkH, 0, hh);
+  trunkGrad.addColorStop(0, darken(color, 0.1));
+  trunkGrad.addColorStop(1, darken(color, 0.45));
+  ctx.fillStyle = trunkGrad;
+  ctx.beginPath();
+  ctx.roundRect(-hw + 4, hh - trunkH, w - 8, trunkH - 1, [0, 0, 4, 4]);
+  ctx.fill();
+
+  // ── ROOF + CABIN ──
+  // Roof sits in middle ~42% — classic E46 coupe roofline
+  const roofTop  = -hh + hoodH + 1;
+  const roofBot  =  hh - trunkH - 1;
+  const roofH    =  roofBot - roofTop;
+
+  const roofGrad = ctx.createLinearGradient(-hw + 6, roofTop, hw - 6, roofTop);
+  roofGrad.addColorStop(0,   darken(color, 0.55));
+  roofGrad.addColorStop(0.15, darken(color, 0.35));
+  roofGrad.addColorStop(0.5, darken(color, 0.25));
+  roofGrad.addColorStop(0.85, darken(color, 0.35));
+  roofGrad.addColorStop(1,   darken(color, 0.55));
   ctx.fillStyle = roofGrad;
-  ctx.beginPath(); ctx.roundRect(-hw + 5, -hh + 14, w - 10, h * 0.42, 4); ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(-hw + 5, roofTop, w - 10, roofH, 3);
+  ctx.fill();
 
-  // ── WINDSHIELD (front) ──
-  ctx.fillStyle = 'rgba(180,220,255,0.45)';
-  ctx.beginPath(); ctx.roundRect(-hw + 6, -hh + 16, w - 12, 16, 3); ctx.fill();
-  // Reflection
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.beginPath(); ctx.roundRect(-hw + 8, -hh + 17, (w - 16) * 0.4, 6, 2); ctx.fill();
+  // ── WINDSHIELD (front glass) ──
+  const wsTop = roofTop - 1;
+  const wsH   = 14;
+  ctx.fillStyle = 'rgba(160,210,255,0.55)';
+  ctx.beginPath();
+  ctx.roundRect(-hw + 6, wsTop, w - 12, wsH, [0, 0, 3, 3]);
+  ctx.fill();
+  // Windshield reflection
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.beginPath();
+  ctx.roundRect(-hw + 8, wsTop + 2, (w - 16) * 0.45, wsH * 0.5, 2);
+  ctx.fill();
+  // Windshield frame
+  ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(-hw + 6, wsTop, w - 12, wsH, [0, 0, 3, 3]);
+  ctx.stroke();
 
   // ── REAR WINDOW ──
-  ctx.fillStyle = 'rgba(140,190,230,0.3)';
-  ctx.beginPath(); ctx.roundRect(-hw + 6, hh - 28, w - 12, 14, 3); ctx.fill();
+  const rwTop = roofBot - 13;
+  const rwH   = 12;
+  ctx.fillStyle = 'rgba(130,185,230,0.4)';
+  ctx.beginPath();
+  ctx.roundRect(-hw + 6, rwTop, w - 12, rwH, [3, 3, 0, 0]);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(-hw + 6, rwTop, w - 12, rwH, [3, 3, 0, 0]);
+  ctx.stroke();
 
   // ── SIDE WINDOWS ──
-  ctx.fillStyle = 'rgba(160,210,240,0.25)';
-  // Left window
-  ctx.beginPath(); ctx.roundRect(-hw + 2, -hh + 22, 4, h * 0.38, 2); ctx.fill();
-  // Right window
-  ctx.beginPath(); ctx.roundRect(hw - 6, -hh + 22, 4, h * 0.38, 2); ctx.fill();
+  const swTop = roofTop + wsH - 1;
+  const swH   = roofH - wsH - rwH + 2;
+  // Left
+  ctx.fillStyle = 'rgba(140,195,235,0.35)';
+  ctx.beginPath(); ctx.roundRect(-hw + 2, swTop, 5, swH, 1); ctx.fill();
+  // Right
+  ctx.beginPath(); ctx.roundRect(hw - 7, swTop, 5, swH, 1); ctx.fill();
+  // B-pillar (center post between front and rear door glass)
+  ctx.fillStyle = darken(color, 0.6);
+  ctx.beginPath(); ctx.roundRect(-2, swTop, 4, swH, 1); ctx.fill();
 
-  // ── HEADLIGHTS ──
-  ctx.fillStyle = isPlayer ? '#fffde7' : '#fef3c7';
-  ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 3, 10, 7, 2); ctx.fill();
-  ctx.beginPath(); ctx.roundRect(hw - 14, -hh + 3, 10, 7, 2); ctx.fill();
-  // Glow
+  // ── DOOR PANEL LINES ──
+  ctx.strokeStyle = darken(color, 0.3);
+  ctx.lineWidth = 0.8;
+  // Waistline character line (runs full length of car)
+  ctx.beginPath();
+  ctx.moveTo(-hw + 2, -hh + hoodH + wsH * 0.6);
+  ctx.lineTo( hw - 2, -hh + hoodH + wsH * 0.6);
+  ctx.stroke();
+
+  // ── BMW KIDNEY GRILLE (front) ──
+  // Two oval cutouts side by side
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.ellipse(-5, -hh + 5, 4, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 5, -hh + 5, 4, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.ellipse(-5, -hh + 5, 4, 3.5, 0, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse( 5, -hh + 5, 4, 3.5, 0, 0, Math.PI * 2); ctx.stroke();
+  // Grille center bar
+  ctx.strokeStyle = '#666';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, -hh + 2); ctx.lineTo(0, -hh + 9); ctx.stroke();
+
+  // ── FRONT BUMPER ──
+  ctx.fillStyle = darken(color, 0.15);
+  ctx.beginPath(); ctx.roundRect(-hw + 3, -hh, w - 6, 4, [3, 3, 0, 0]); ctx.fill();
+  // Bumper lower lip
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath(); ctx.roundRect(-hw + 5, -hh + 1, w - 10, 2, 1); ctx.fill();
+  // Fog light housings
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 9, 6, 4, 1); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 10, -hh + 9, 6, 4, 1); ctx.fill();
+
+  // ── HEADLIGHTS — angel eye style ──
+  // Outer housing
+  ctx.fillStyle = '#222';
+  ctx.beginPath(); ctx.roundRect(-hw + 3, -hh + 1, 11, 9, 2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 14, -hh + 1, 11, 9, 2); ctx.fill();
+  // Main lens
+  ctx.fillStyle = isPlayer ? '#fffde7' : '#e8e0c8';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, -hh + 2, 9, 7, 2); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 13, -hh + 2, 9, 7, 2); ctx.fill();
+  // Angel eye ring (E46 signature DRL)
+  ctx.strokeStyle = isPlayer ? 'rgba(255,240,180,0.9)' : 'rgba(220,210,160,0.6)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.arc(-hw + 8.5, -hh + 5.5, 3, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc( hw - 8.5, -hh + 5.5, 3, 0, Math.PI * 2); ctx.stroke();
+  // Headlight inner dot
+  ctx.fillStyle = isPlayer ? '#fff8d0' : '#ddd8b0';
+  ctx.beginPath(); ctx.arc(-hw + 8.5, -hh + 5.5, 1.5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc( hw - 8.5, -hh + 5.5, 1.5, 0, Math.PI * 2); ctx.fill();
+  // Headlight glow (player only)
   if (isPlayer) {
     ctx.save();
-    ctx.globalAlpha = 0.2;
-    const hgrd = ctx.createRadialGradient(-hw + 9, -hh, 0, -hw + 9, -hh, 22);
-    hgrd.addColorStop(0, '#fff8c0'); hgrd.addColorStop(1, 'transparent');
-    ctx.fillStyle = hgrd;
-    ctx.beginPath(); ctx.arc(-hw + 9, -hh, 22, 0, Math.PI * 2); ctx.fill();
-    const hgrd2 = ctx.createRadialGradient(hw - 9, -hh, 0, hw - 9, -hh, 22);
-    hgrd2.addColorStop(0, '#fff8c0'); hgrd2.addColorStop(1, 'transparent');
-    ctx.fillStyle = hgrd2;
-    ctx.beginPath(); ctx.arc(hw - 9, -hh, 22, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.18;
+    const hgl = ctx.createRadialGradient(-hw + 8.5, -hh, 0, -hw + 8.5, -hh, 28);
+    hgl.addColorStop(0, '#fffacc'); hgl.addColorStop(1, 'transparent');
+    ctx.fillStyle = hgl;
+    ctx.beginPath(); ctx.arc(-hw + 8.5, -hh, 28, 0, Math.PI * 2); ctx.fill();
+    const hgr = ctx.createRadialGradient(hw - 8.5, -hh, 0, hw - 8.5, -hh, 28);
+    hgr.addColorStop(0, '#fffacc'); hgr.addColorStop(1, 'transparent');
+    ctx.fillStyle = hgr;
+    ctx.beginPath(); ctx.arc(hw - 8.5, -hh, 28, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
   }
 
-  // ── TAILLIGHTS ──
-  ctx.fillStyle = '#dc2626';
-  ctx.beginPath(); ctx.roundRect(-hw + 4, hh - 9, 10, 6, 2); ctx.fill();
-  ctx.beginPath(); ctx.roundRect(hw - 14, hh - 9, 10, 6, 2); ctx.fill();
-  // Brake glow when reversing
-  ctx.fillStyle = 'rgba(220,38,38,0.15)';
-  ctx.beginPath(); ctx.ellipse(-hw + 9, hh, 12, 8, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(hw - 9, hh, 12, 8, 0, 0, Math.PI * 2); ctx.fill();
+  // ── REAR BUMPER ──
+  ctx.fillStyle = darken(color, 0.2);
+  ctx.beginPath(); ctx.roundRect(-hw + 3, hh - 4, w - 6, 4, [0, 0, 3, 3]); ctx.fill();
+  // Diffuser strip
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.roundRect(-hw + 6, hh - 3, w - 12, 2, 1); ctx.fill();
+  // Dual exhaust pipes (E46 M-style)
+  ctx.fillStyle = '#333';
+  ctx.beginPath(); ctx.ellipse(-6, hh - 1, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 6, hh - 1, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#555';
+  ctx.beginPath(); ctx.ellipse(-6, hh - 1, 1.5, 1, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 6, hh - 1, 1.5, 1, 0, 0, Math.PI * 2); ctx.fill();
 
-  // ── GRILLE ──
-  ctx.fillStyle = darken(color, 0.6);
-  ctx.beginPath(); ctx.roundRect(-hw + 6, -hh + 2, w - 12, 5, 2); ctx.fill();
-  // Grille lines
-  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-  ctx.lineWidth = 1;
-  for (let gi = -hw + 8; gi < hw - 6; gi += 5) {
-    ctx.beginPath(); ctx.moveTo(gi, -hh + 2); ctx.lineTo(gi, -hh + 7); ctx.stroke();
-  }
+  // ── TAILLIGHTS — E46 wrap-around style ──
+  // Outer red housing
+  ctx.fillStyle = '#7f1d1d';
+  ctx.beginPath(); ctx.roundRect(-hw + 3, hh - 12, 10, 9, [0, 0, 0, 3]); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 13, hh - 12, 10, 9, [0, 0, 3, 0]); ctx.fill();
+  // Red lens
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, hh - 11, 8, 7, 1); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 12, hh - 11, 8, 7, 1); ctx.fill();
+  // Inner amber indicator strip
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath(); ctx.roundRect(-hw + 4, hh - 11, 8, 2, 1); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 12, hh - 11, 8, 2, 1); ctx.fill();
+  // Reflector center
+  ctx.fillStyle = '#fca5a5';
+  ctx.beginPath(); ctx.roundRect(-hw + 5, hh - 8, 6, 3, 1); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( hw - 11, hh - 8, 6, 3, 1); ctx.fill();
+  // Tail glow on ground
+  ctx.save();
+  ctx.globalAlpha = 0.12;
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath(); ctx.ellipse(-hw + 8, hh + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( hw - 8, hh + 2, 10, 6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
 
-  // ── ROOF SHINE ──
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath(); ctx.ellipse(-hw/4, -hh + 20, hw * 0.5, 5, -0.3, 0, Math.PI * 2); ctx.fill();
+  // ── ROOF SHINE — long specular highlight ──
+  ctx.fillStyle = 'rgba(255,255,255,0.12)';
+  ctx.beginPath();
+  ctx.ellipse(-hw * 0.1, roofTop + roofH * 0.35, hw * 0.38, roofH * 0.18, -0.15, 0, Math.PI * 2);
+  ctx.fill();
 
-  // ── DAMAGE CRACKS ──
-  if (damage > 20) {
-    ctx.strokeStyle = `rgba(0,0,0,${Math.min(damage / 100 * 0.9, 0.8)})`;
-    ctx.lineWidth = 1.5;
-    if (damage > 20) {
-      ctx.beginPath(); ctx.moveTo(-w/4, -h/4); ctx.lineTo(-w/8, -h/8); ctx.lineTo(w/6, -h/5); ctx.stroke();
+  // ── SPOILER — small lip spoiler on trunk (E46 coupe) ──
+  ctx.fillStyle = darken(color, 0.4);
+  ctx.beginPath(); ctx.roundRect(-hw + 8, hh - trunkH - 2, w - 16, 3, 1); ctx.fill();
+  ctx.strokeStyle = darken(color, 0.6);
+  ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.roundRect(-hw + 8, hh - trunkH - 2, w - 16, 3, 1); ctx.stroke();
+
+  // ── DAMAGE ──
+  if (damage > 15) {
+    // Paint chips / scratches
+    ctx.strokeStyle = `rgba(0,0,0,${Math.min(damage / 100, 0.75)})`;
+    ctx.lineWidth = 1.2;
+    if (damage > 15) {
+      ctx.beginPath(); ctx.moveTo(-hw + 8, -hh + 6); ctx.lineTo(-hw + 14, -hh + 12); ctx.lineTo(-hw + 10, -hh + 16); ctx.stroke();
     }
-    if (damage > 40) {
-      ctx.beginPath(); ctx.moveTo(w/4, h/5); ctx.lineTo(w/8, h/3); ctx.lineTo(0, h/4); ctx.stroke();
+    if (damage > 35) {
+      ctx.beginPath(); ctx.moveTo(hw - 8, hh - 14); ctx.lineTo(hw - 14, hh - 8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, -hh + 8); ctx.lineTo(4, -hh + 14); ctx.lineTo(-2, -hh + 18); ctx.stroke();
     }
-    if (damage > 60) {
-      ctx.beginPath(); ctx.moveTo(-w/3, h/4); ctx.lineTo(-w/5, h/3); ctx.lineTo(-w/8, h/2 - 6); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(w/3, -h/5); ctx.lineTo(w/5, 0); ctx.stroke();
+    if (damage > 55) {
+      ctx.beginPath(); ctx.moveTo(-hw + 5, hh - 20); ctx.lineTo(-hw + 12, hh - 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hw - 5, -hh + 14); ctx.lineTo(hw - 12, -hh + 22); ctx.lineTo(hw - 8, -hh + 26); ctx.stroke();
     }
-    if (damage > 80) {
-      ctx.fillStyle = 'rgba(200,50,50,0.25)';
+    if (damage > 75) {
+      // Heavy damage — dark smudge over body
+      ctx.fillStyle = `rgba(20,0,0,${(damage - 75) / 100 * 0.5})`;
       ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.fill();
+      // Cracked windshield
+      ctx.strokeStyle = 'rgba(200,220,255,0.6)';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(-hw + 8, wsTop + 3); ctx.lineTo(-hw + 16, wsTop + wsH - 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-hw + 16, wsTop + 3); ctx.lineTo(-hw + 10, wsTop + wsH - 3); ctx.stroke();
     }
   }
 
-  // ── PLAYER OUTLINE ──
+  // ── PLAYER INDICATOR ──
   if (isPlayer) {
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.roundRect(-hw, -hh, w, h, 7); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.roundRect(-hw - 3, -hh - 3, w + 6, h + 6, 9); ctx.stroke();
+    ctx.setLineDash([]);
   }
 
   ctx.restore();
