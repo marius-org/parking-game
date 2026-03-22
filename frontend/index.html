@@ -1224,6 +1224,115 @@ function seededRand(seed) {
   return () => { s = (s * 1664525 + 1013904223) & 0xffffffff; return (s >>> 0) / 0xffffffff; };
 }
 
+// ── DRAW TRAM — RATT Timișoara white/violet livery ──
+function drawTram(tx, ty, dir) {
+  const TW = 110, TH = 36; // tram dimensions top-down — scaled up
+  ctx.save();
+  ctx.translate(tx, ty);
+  if (dir === -1) ctx.scale(-1, 1); // flip for westbound
+
+  // Tram body shadow
+  ctx.save(); ctx.globalAlpha = 0.25; ctx.fillStyle = '#000';
+  ctx.beginPath(); ctx.roundRect(-TW/2 + 3, -TH/2 + 3, TW, TH, 3); ctx.fill();
+  ctx.restore();
+
+  // Main body — white
+  const bg = ctx.createLinearGradient(-TW/2, -TH/2, TW/2, TH/2);
+  bg.addColorStop(0, '#f0f0f0');
+  bg.addColorStop(0.5, '#e8e8e8');
+  bg.addColorStop(1, '#d8d8d8');
+  ctx.fillStyle = bg;
+  ctx.beginPath(); ctx.roundRect(-TW/2, -TH/2, TW, TH, 3); ctx.fill();
+
+  // Violet stripe — RATT livery signature band
+  ctx.fillStyle = '#5c2d8a';
+  ctx.fillRect(-TW/2, -TH/2 + 4, TW, 5);
+  // Second thinner stripe
+  ctx.fillStyle = '#7a3db5';
+  ctx.fillRect(-TW/2, -TH/2 + 10, TW, 2);
+
+  // Windows — dark tinted row
+  ctx.fillStyle = 'rgba(40,30,70,0.7)';
+  const winY = -TH/2 + 13;
+  for (let wx = -TW/2 + 5; wx < TW/2 - 8; wx += 10) {
+    ctx.beginPath(); ctx.roundRect(wx, winY, 7, 4, 1); ctx.fill();
+    // Window glint
+    ctx.fillStyle = 'rgba(180,220,255,0.3)';
+    ctx.fillRect(wx + 1, winY + 1, 3, 1);
+    ctx.fillStyle = 'rgba(40,30,70,0.7)';
+  }
+
+  // Front face — right side (direction of travel)
+  ctx.fillStyle = '#ddd';
+  ctx.beginPath(); ctx.roundRect(TW/2 - 4, -TH/2, 4, TH, [0,3,3,0]); ctx.fill();
+  // Front headlight
+  ctx.fillStyle = '#fffde0';
+  ctx.beginPath(); ctx.roundRect(TW/2 - 4, -TH/2 + 3, 4, 4, 1); ctx.fill();
+  ctx.save(); ctx.globalAlpha = 0.2;
+  const hg = ctx.createRadialGradient(TW/2, 0, 0, TW/2, 0, 25);
+  hg.addColorStop(0, '#fffde0'); hg.addColorStop(1, 'transparent');
+  ctx.fillStyle = hg;
+  ctx.beginPath(); ctx.arc(TW/2, 0, 25, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // Front destination board
+  ctx.fillStyle = '#111';
+  ctx.beginPath(); ctx.roundRect(TW/2 - 4, -TH/2 + 8, 4, 5, 1); ctx.fill();
+  ctx.fillStyle = '#ff9900';
+  ctx.font = 'bold 3px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('TM', TW/2 - 2, -TH/2 + 12);
+
+  // Rear face
+  ctx.fillStyle = '#cc2222';
+  ctx.beginPath(); ctx.roundRect(-TW/2, -TH/2 + 2, 4, TH - 4, [3,0,0,3]); ctx.fill();
+  ctx.fillStyle = '#ff4444';
+  ctx.beginPath(); ctx.roundRect(-TW/2, -TH/2 + 3, 4, 4, 1); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-TW/2, TH/2 - 7, 4, 4, 1); ctx.fill();
+
+  // Roof — pantograph (electric connector arm)
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(-TW/4, -TH/2);
+  ctx.lineTo(-TW/4 + 4, -TH/2 - 6);
+  ctx.lineTo(TW/4 - 4, -TH/2 - 6);
+  ctx.lineTo(TW/4, -TH/2);
+  ctx.stroke();
+  // Pantograph top wire contact
+  ctx.strokeStyle = '#aaa';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(-TW/4 + 4, -TH/2 - 6);
+  ctx.lineTo(TW/4 - 4, -TH/2 - 6);
+  ctx.stroke();
+
+  // RATT logo area — violet rectangle with line number
+  ctx.fillStyle = '#5c2d8a';
+  ctx.beginPath(); ctx.roundRect(-8, -TH/2 + 1, 16, 5, 1); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 4px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('RATT', 0, -TH/2 + 5);
+
+  // Wheels / bogies
+  ctx.fillStyle = '#333';
+  const bogieY = TH/2;
+  [[-TW/3, bogieY], [TW/3, bogieY]].forEach(([bx, by]) => {
+    ctx.beginPath(); ctx.roundRect(bx - 7, by - 2, 14, 4, 1); ctx.fill();
+    ctx.fillStyle = '#555';
+    ctx.beginPath(); ctx.arc(bx - 4, by, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(bx + 4, by, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#333';
+  });
+
+  // Body outline
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(-TW/2, -TH/2, TW, TH, 3); ctx.stroke();
+
+  ctx.restore();
+}
+
 function drawScene() {
   const W = canvas.width, H = canvas.height;
   const level = game.levels[game.levelIndex];
@@ -1312,30 +1421,88 @@ function drawScene() {
   ctx.beginPath(); ctx.moveTo(W - 58, canalH); ctx.lineTo(W - 58, H - 58); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(0, H - 58); ctx.lineTo(W, H - 58); ctx.stroke();
 
-  // ── TRAM TRACKS — Timișoara had first electric tram in Europe 1884 ──
-  ctx.strokeStyle = 'rgba(120,100,80,0.55)';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([]);
-  // Two tracks running horizontally through center
-  ctx.beginPath(); ctx.moveTo(0, cy - 14); ctx.lineTo(W, cy - 14); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, cy + 14); ctx.lineTo(W, cy + 14); ctx.stroke();
-  // Rail shine
-  ctx.strokeStyle = 'rgba(180,160,130,0.3)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0, cy - 14); ctx.lineTo(W, cy - 14); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, cy + 14); ctx.lineTo(W, cy + 14); ctx.stroke();
+  // ── TRAM TRACKS — Timișoara, first electric tram in Europe 1884 ──
+  // Track bed — slightly inset stone strip
+  ctx.fillStyle = 'rgba(60,50,35,0.4)';
+  ctx.fillRect(0, cy - 32, W, 64);
+
   // Sleepers / ties
-  ctx.strokeStyle = 'rgba(80,60,40,0.4)';
-  ctx.lineWidth = 2;
-  for (let tx = 40; tx < W; tx += 28) {
-    ctx.beginPath(); ctx.moveTo(tx, cy - 20); ctx.lineTo(tx, cy + 20); ctx.stroke();
+  ctx.strokeStyle = 'rgba(80,60,40,0.55)';
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([]);
+  for (let slx = 0; slx < W; slx += 24) {
+    ctx.beginPath(); ctx.moveTo(slx, cy - 28); ctx.lineTo(slx, cy + 28); ctx.stroke();
   }
 
-  // Tram label
-  ctx.fillStyle = 'rgba(160,130,100,0.4)';
-  ctx.font = 'bold 9px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('LINIA 1', 70, cy - 18);
+  // Left rail (eastbound track)
+  ctx.strokeStyle = 'rgba(140,120,90,0.7)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, cy - 20); ctx.lineTo(W, cy - 20); ctx.stroke();
+  // Rail shine
+  ctx.strokeStyle = 'rgba(210,190,150,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, cy - 20); ctx.lineTo(W, cy - 20); ctx.stroke();
+
+  // Right rail (westbound track)
+  ctx.strokeStyle = 'rgba(140,120,90,0.7)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(0, cy + 20); ctx.lineTo(W, cy + 20); ctx.stroke();
+  ctx.strokeStyle = 'rgba(210,190,150,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, cy + 20); ctx.lineTo(W, cy + 20); ctx.stroke();
+
+  // Overhead wire
+  ctx.strokeStyle = 'rgba(180,180,160,0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([40, 6]);
+  ctx.beginPath(); ctx.moveTo(0, cy - 20); ctx.lineTo(W, cy - 20); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, cy + 20); ctx.lineTo(W, cy + 20); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Wire support poles every 120px
+  ctx.strokeStyle = 'rgba(100,100,80,0.3)';
+  ctx.lineWidth = 1.5;
+  for (let wp = 60; wp < W; wp += 120) {
+    ctx.beginPath(); ctx.moveTo(wp, cy - 40); ctx.lineTo(wp, cy - 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(wp, cy + 20); ctx.lineTo(wp, cy + 40); ctx.stroke();
+    // Crossbar
+    ctx.beginPath(); ctx.moveTo(wp - 10, cy - 40); ctx.lineTo(wp + 10, cy - 40); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(wp - 10, cy + 40); ctx.lineTo(wp + 10, cy + 40); ctx.stroke();
+  }
+
+  // ── ANIMATE TRAMS ──
+  if (!trams[0]._init) {
+    trams[0].x = -130; trams[0].y = cy - 20; trams[0]._init = true;
+    trams[1].x = W + 130; trams[1].y = cy + 20; trams[1]._init = true;
+  }
+
+  // Move trams
+  trams.forEach(t => {
+    if (game.running && !game.paused) {
+      if (t.stopTimer > 0) {
+        t.stopTimer--;
+      } else {
+        t.x += t.dir * t.speed;
+        // Random stop at a "stop"
+        if (Math.random() < 0.0005) t.stopTimer = 120;
+      }
+      // Wrap around
+      if (t.dir === 1  && t.x > W + 70) t.x = -70;
+      if (t.dir === -1 && t.x < -70)    t.x = W + 70;
+    }
+    drawTram(t.x, t.y, t.dir);
+  });
+
+  // Stop sign markers along track
+  ['PIAȚA UNIRII', 'OPERĂ', 'FABRIC'].forEach((stop, i) => {
+    const sx = 120 + i * (W - 240) / 2;
+    ctx.fillStyle = 'rgba(92,45,138,0.5)';
+    ctx.beginPath(); ctx.roundRect(sx - 24, cy - 32, 48, 8, 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'bold 5px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(stop, sx, cy - 26);
+  });
 
   // ── ROAD DASHES ──
   ctx.setLineDash([24, 18]);
@@ -1599,12 +1766,7 @@ function drawScene() {
   // ── PARKING SPOT ──
   drawParkingSpot(level.spot);
 
-  // ── TRAM OVERHEAD WIRE (visual only) ──
-  ctx.strokeStyle = 'rgba(180,180,160,0.2)';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([60, 4]);
-  ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
-  ctx.setLineDash([]);
+  // tram overhead wire handled in tram tracks section
 
   // ── PARKED CARS ──
   level.parkedCars.forEach(pc => {
@@ -2065,6 +2227,21 @@ function darken(hex, amount) {
 // ══════════════════════════════════════════
 // GAME STATE
 // ══════════════════════════════════════════
+// ── TRAM STATE ──
+const trams = [
+  // Tram going right (east)
+  { x: -120, y: 0, dir: 1,  speed: 2.2, line: '1', stopped: false, stopTimer: 0 },
+  // Tram going left (west)
+  { x: 0,    y: 0, dir: -1, speed: 1.8, line: '4', stopped: false, stopTimer: 0 },
+];
+
+function initTrams(cy) {
+  trams[0].x = -120;
+  trams[0].y = cy - 14;
+  trams[1].x = window.innerWidth; // start off right edge
+  trams[1].y = cy + 14;
+}
+
 const game = {
   running: false,
   paused: false,
@@ -2138,6 +2315,29 @@ function gameLoop(timestamp) {
       return;
     }
   }
+
+  // Collision with trams — tram wins, heavy damage
+  const TRAM_W = 110, TRAM_H = 36;
+  trams.forEach(t => {
+    if (!t._init) return;
+    const tramAngle = 0; // trams always horizontal
+    const carC = carCorners(car.x, car.y, car.angle, CAR_W, CAR_H);
+    const tramC = carCorners(t.x, t.y, tramAngle, TRAM_W, TRAM_H);
+    if (sat(carC, tramC)) {
+      // Tram hits hard — instant heavy damage
+      const impact = Math.abs(car.speed) + Math.abs(t.speed) * 2;
+      car.damage = Math.min(car.damage + impact * 18, 100);
+      // Push car away from tram
+      car.speed *= -0.6;
+      car.x += (car.x > t.x ? 8 : -8);
+      car.y += (car.y > t.y ? 6 : -6);
+      game.crashes++;
+      if (car.damage >= 100) {
+        failLevel('Hit by tram! 🚃');
+        return;
+      }
+    }
+  });
 
   // Check parked
   const check = checkParked(car, level.spot);
