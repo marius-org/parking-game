@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: parking-game
-          image: mariuseu/parking-game:latest
+          image: mariuseu/parking-game:10
           ports:
             - containerPort: 8000
           env:
