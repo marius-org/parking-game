@@ -1,67 +1,126 @@
 # Park Like a Pro 🚗
 
-Top-down parking simulator deployed on k3s homelab.
+> **Top-down parking simulator — Timișoara edition**
 
-## Stack
-- **Frontend:** Vanilla HTML5 Canvas
-- **Backend:** FastAPI + asyncpg
-- **Database:** PostgreSQL 16 (StatefulSet)
-- **Storage:** NFS PVC (2Gi)
-- **CI/CD:** GitHub Actions → Docker Hub → k3s
+A browser-based top-down parking game with Ackermann steering physics, 15 levels, and a Timișoara-themed environment with animated RATT trams.
 
-## Local dev
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload --port 8000
+🎮 **Live:** [parking.slax.ro](https://parking.slax.ro)
+
+---
+
+## What It Does
+
+The player maneuvers a car into a designated parking spot across 15 progressively harder levels. The game features realistic Ackermann steering physics, obstacles, and a scoring system based on time and precision. Scores are saved to a leaderboard backed by PostgreSQL.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Game frontend | HTML5 Canvas + Vanilla JavaScript |
+| Backend API | Python / FastAPI + asyncpg |
+| Leaderboard DB | PostgreSQL 16 (StatefulSet) |
+| Storage | NFS PVC (2Gi) |
+| Containerization | Docker |
+| Container registry | Docker Hub (`mariuseu/parking-game`) |
+| CI/CD | GitHub Actions (self-hosted runner on `control-node`) |
+| GitOps | ArgoCD |
+| Orchestration | Kubernetes (k3s HA cluster) |
+| Ingress | ingress-nginx + Cloudflare Tunnel |
+| Domain | [parking.slax.ro](https://parking.slax.ro) |
+
+---
+
+## Project Structure
+
+```
+parking-game/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml       # CI/CD pipeline
+├── backend/
+│   ├── main.py              # FastAPI backend (score API)
+│   └── requirements.txt     # Python dependencies
+├── frontend/
+│   └── index.html           # Game (HTML5 Canvas)
+├── k3s/
+│   ├── deployment.yaml      # Kubernetes Deployment + Service
+│   ├── ingress.yaml         # Ingress rule for parking.slax.ro
+│   └── postgres.yaml        # PostgreSQL StatefulSet + PVC
+└── Dockerfile
 ```
 
-## Deploy to k3s
+---
 
-**1. Create namespace + database (first time only):**
+## CI/CD Pipeline
+
+Every push to `main` triggers the GitHub Actions workflow:
+
+1. **Build** Docker image
+2. **Push** to Docker Hub with tag `mariuseu/parking-game:<run_number>` and `:latest`
+3. **Update** `k3s/deployment.yaml` with the new image tag
+4. **Commit & push** the manifest change back to the repo
+5. **ArgoCD** detects the change and auto-syncs the deployment to the k3s cluster
+
+```
+git push → GitHub Actions → Docker Hub → manifest update → ArgoCD → k3s cluster
+```
+
+---
+
+## Running Locally
+
+### Prerequisites
+
+- Docker
+
+### Steps
+
 ```bash
-# Create secret manually — do NOT commit credentials
+git clone https://github.com/marius-org/parking-game.git
+cd parking-game
+docker build -t parking-game .
+docker run -p 8000:8000 parking-game
+```
+
+Open [http://localhost:8000](http://localhost:8000) in your browser.
+
+---
+
+## Kubernetes Deployment (k3s)
+
+The app runs in its own namespace on a 3-master / 2-worker k3s HA cluster.
+
+### First-time setup — create the secret manually (never commit credentials)
+
+```bash
 kubectl create secret generic parking-secret \
   -n parking-game \
   --from-literal=POSTGRES_DB=parkingdb \
   --from-literal=POSTGRES_USER=parking \
   --from-literal=POSTGRES_PASSWORD=parkingpass \
   --from-literal=DATABASE_URL="postgresql://parking:parkingpass@postgres-service:5432/parkingdb"
+```
 
-# Apply namespace + postgres (remove Secret block from file first)
+### Apply manifests (normally handled by ArgoCD)
+
+```bash
 kubectl apply -f k3s/postgres.yaml
-```
-
-**2. Deploy app:**
-```bash
 kubectl apply -f k3s/deployment.yaml
+kubectl apply -f k3s/ingress.yaml
 ```
 
-**3. Add HAProxy backend (on 192.168.1.99 — edit `/etc/haproxy/haproxy.cfg`):**
-```
-# Parking Game - port 8092
-frontend parking_front
-    bind *:8092
-    default_backend parking_back
+Traffic flow:
 
-backend parking_back
-    balance roundrobin
-    option httpchk GET /health
-    server worker01 192.168.1.54:32529 check inter 30s rise 2 fall 3
-    server worker02 192.168.1.55:32529 check inter 30s rise 2 fall 3
+```
+Internet → Cloudflare Tunnel → ingress-nginx (MetalLB) → parking-game-service (ClusterIP) → pods
 ```
 
-Then reload HAProxy:
-```bash
-ssh ubuntu@192.168.1.99 "sudo systemctl reload haproxy"
-```
+---
 
-**4. Add Cloudflare Tunnel route:**
-```
-parking.slax.ro → http://192.168.1.99:8092
-```
+## Useful Commands
 
-## Useful commands
 ```bash
 # Check pods
 kubectl get pods -n parking-game
@@ -72,7 +131,7 @@ kubectl get svc -n parking-game
 # View logs
 kubectl logs -l app=parking-game -n parking-game -f
 
-# Query scores
+# Query leaderboard
 kubectl exec -it postgres-0 -n parking-game -- \
   psql -U parking -d parkingdb -c "SELECT * FROM scores ORDER BY score DESC;"
 
@@ -82,5 +141,22 @@ kubectl exec -it postgres-0 -n parking-game -- \
   "INSERT INTO scores (player_name, score) VALUES ('Marius', 9999);"
 ```
 
-## NodePort
-`32529` — add to HAProxy config pointing to this port on workers.
+---
+
+## Environment Variables
+
+| Variable | Description |
+|---|---|
+| `POSTGRES_DB` | Database name |
+| `POSTGRES_USER` | Database user |
+| `POSTGRES_PASSWORD` | Database password |
+| `DATABASE_URL` | Full asyncpg connection string |
+
+---
+
+## GitHub Secrets Required
+
+| Secret | Description |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub username |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
