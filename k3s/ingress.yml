@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: parking-game-ingress
+  namespace: parking-game
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: parking.slax.ro
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: parking-game-service
+                port:
+                  number: 80
